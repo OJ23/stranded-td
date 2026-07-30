@@ -31,13 +31,27 @@ export default function GamePage() {
     location.state?.newGame ? initialGameState : loadGame() ?? initialGameState,
   );
   const [restartOpen, setRestartOpen] = useState(false);
+  const [saveConfirmed, setSaveConfirmed] = useState(false);
   const corridor = getCorridor(state.currentRoom);
   const room = corridor ?? sideRooms[state.currentRoom];
-  const isSideRoom = !corridor;
+  const sceneRoom =
+    state.currentRoom === "2h" && state.survivorFound
+      ? {
+          ...room,
+          text: "The wounded engineer reveals that the man in 2G is the saboteur who incapacitated her. She warns you not to enter 2G and confirms that 2F is an exposed airlock. With your oxygen shared, she can now reach the escape pod with you.",
+          objective: "Avoid rooms 2F and 2G. Reach the escape deck together.",
+        }
+      : room;
 
   useEffect(() => {
     saveGame(state);
   }, [state]);
+
+  useEffect(() => {
+    if (!saveConfirmed) return undefined;
+    const timeout = window.setTimeout(() => setSaveConfirmed(false), 1600);
+    return () => window.clearTimeout(timeout);
+  }, [saveConfirmed]);
 
   const update = useCallback((fn, ...args) => {
     setState((current) => fn(current, ...args));
@@ -52,8 +66,8 @@ export default function GamePage() {
       const collected = state.inventory.includes(`${side.id}-collected`);
       if (["scanner", "battery", "oxygen"].includes(side.type) && !collected) {
         result.push({
-          title: side.type === "scanner" ? "Take the scanner" : side.type === "battery" ? "Recover the power cell" : "Refill suit oxygen",
-          detail: side.type === "oxygen" ? "Restore up to 100 O₂" : side.type === "battery" ? "Add 5 battery units" : "Unlock room scans",
+          title: side.type === "scanner" ? "Take scanner and launch key" : side.type === "battery" ? "Recover the power cell" : "Refill suit oxygen",
+          detail: side.type === "oxygen" ? "Restore up to 100 O₂" : side.type === "battery" ? "Add 10 battery units" : "Unlock scans and manual launch",
           action: () => update(collectRoomItem),
         });
       }
@@ -85,9 +99,10 @@ export default function GamePage() {
         const scanned = state.scanned.includes(roomId);
         result.push({
           title: `Enter ${target.label}`,
-          detail: scanned ? target.signal : target.name,
+          detail: scanned ? target.signal : "Scan pending",
           action: () => update(moveTo, roomId),
           variant: scanned && target.type === "hazard" ? "danger" : scanned && ["survivor", "traitor"].includes(target.type) ? "signal" : "default",
+          roomId,
         });
         if (state.inventory.includes("scanner") && state.battery > 0 && !scanned) {
           result.push({
@@ -95,14 +110,15 @@ export default function GamePage() {
             detail: "Costs 1 battery",
             action: () => update(scanRoom, roomId),
             variant: "quiet",
+            roomId,
           });
         }
       });
     }
     if (room.action === "comms" && !state.commsRepaired) {
       result.push({
-        title: "Repair communications",
-        detail: state.battery ? "Costs 1 battery" : "Portable battery required",
+        title: "Send distress signal",
+        detail: state.battery ? "Transmit now · costs 1 battery" : "Requires 1 battery · optional",
         action: () => update(repairComms),
         disabled: state.battery < 1,
         variant: "signal",
@@ -119,9 +135,9 @@ export default function GamePage() {
     if (room.ending) {
       result.push({
         title: "Use the manual launch",
-        detail: "Costs 2 battery · deny AI access",
+        detail: !state.inventory.includes("engineer-key") ? "Launch key required" : "Costs 2 battery · deny AI access",
         action: () => update(launch, false),
-        disabled: state.battery < 2,
+        disabled: state.battery < 2 || !state.inventory.includes("engineer-key"),
         variant: "signal",
       });
       result.push({
@@ -130,6 +146,12 @@ export default function GamePage() {
         action: () => update(launch, true),
         disabled: state.battery < 2,
         variant: "danger",
+      });
+      result.push({
+        title: "Retrace your steps",
+        detail: "Return to Deck 02 · movement costs 10 O₂",
+        action: () => update(retreat),
+        variant: "quiet",
       });
     } else {
       result.push({
@@ -166,9 +188,21 @@ export default function GamePage() {
     setRestartOpen(false);
   };
 
+  const save = () => {
+    saveGame(state);
+    setSaveConfirmed(true);
+  };
+
   const continueExploring = () => {
     setState((current) => ({ ...current, ending: null, oxygen: Math.max(current.oxygen, 20) }));
   };
+
+  const routeStage =
+    state.currentRoom === "1a"
+      ? "Awakening"
+      : room.deck === 3
+        ? "Ascension"
+        : "Adventuring";
 
   if (state.ending) {
     return (
@@ -182,26 +216,53 @@ export default function GamePage() {
 
   return (
     <div className="game-shell">
-      <GameHeader onRestart={() => setRestartOpen(true)} />
+      <GameHeader
+        onRestart={() => setRestartOpen(true)}
+        onSave={save}
+        saveConfirmed={saveConfirmed}
+      />
       <main className="game-layout">
         <StatusPanel state={state} />
         <section className="game-stage">
           <div className="route-line" aria-label={`Current room ${state.currentRoom}`}>
-            <span>Awakening</span>
+            <span className={routeStage === "Awakening" ? "is-current" : ""}>Awakening</span>
             <i />
-            <strong>{isSideRoom ? "Detour" : room.deck === 3 ? "Ascension" : "Adventuring"}</strong>
+            <span className={routeStage === "Adventuring" ? "is-current" : ""}>Adventuring</span>
             <i />
-            <span>Escape</span>
+            <span className={routeStage === "Ascension" ? "is-current" : ""}>Ascension</span>
           </div>
-          <SceneCard room={room}>
+          <SceneCard room={sceneRoom}>
             <div className="choices" aria-label="Available choices">
               <div className="choices__heading">
                 <span>Choose an action</span>
                 <span>{choices.length} available</span>
               </div>
-              {choices.map((choice, index) => (
-                <ChoiceButton key={`${choice.title}-${index}`} index={index + 1} {...choice} onClick={choice.action} />
-              ))}
+              {room.junction && (
+                <div className="junction-choices">
+                  {junctionRooms[room.junction].map((roomId) => (
+                    <div className="junction-choice-row" key={roomId}>
+                      {choices
+                        .map((choice, index) => ({ choice, index }))
+                        .filter(({ choice }) => choice.roomId === roomId)
+                        .map(({ choice, index }) => (
+                          <ChoiceButton key={choice.title} index={index + 1} {...choice} onClick={choice.action} />
+                        ))}
+                      {state.scanned.includes(roomId) && (
+                        <div className="scan-result" role="status">
+                          <span>{sideRooms[roomId].label} scan result</span>
+                          <strong>{sideRooms[roomId].signal}</strong>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {choices
+                .map((choice, index) => ({ choice, index }))
+                .filter(({ choice }) => !room.junction || !choice.roomId)
+                .map(({ choice, index }) => (
+                  <ChoiceButton key={`${choice.title}-${index}`} index={index + 1} {...choice} onClick={choice.action} />
+                ))}
             </div>
           </SceneCard>
         </section>

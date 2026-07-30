@@ -41,7 +41,7 @@ export const corridors = [
     name: "Comms Relay",
     eyebrow: "Deck 01 / Communications",
     text: "The relay is dark but intact. Its emergency cells have been stripped; a portable battery could wake it long enough to send a burst.",
-    objective: "Repair the relay if you have power, then take the lift.",
+    objective: "Send an optional distress signal if you have battery power, or continue to the lift.",
     action: "comms",
   },
   {
@@ -103,7 +103,7 @@ export const sideRooms = {
     name: "Outer Lock",
     label: "Port F",
     type: "hazard",
-    signal: "No atmosphere detected",
+    signal: "No life sign detected",
     text: "The inner door seals behind you. Before you can turn, the outer lock cycles open into the dark.",
   },
   "1g": {
@@ -111,15 +111,15 @@ export const sideRooms = {
     name: "Supply Store",
     label: "Port G",
     type: "scanner",
-    signal: "No life signs",
-    text: "Shelves lie overturned beneath a faded STORE stencil. A microwave scanner still blinks inside its charging cradle.",
+    signal: "No life sign detected",
+    text: "Shelves lie overturned beneath a faded STORE stencil. A microwave scanner still blinks inside its charging cradle, beside a manual launch key marked for the escape deck.",
   },
   "1h": {
     id: "1h",
     name: "Auxiliary Power",
     label: "Starboard H",
     type: "battery",
-    signal: "No life signs",
+    signal: "No life sign detected",
     text: "A bank of dead capacitors surrounds one intact portable cell.",
   },
   "1i": {
@@ -127,7 +127,7 @@ export const sideRooms = {
     name: "Emergency Stores",
     label: "Starboard I",
     type: "oxygen",
-    signal: "No life signs",
+    signal: "No life sign detected",
     text: "An emergency cylinder sits behind cracked safety glass, its gauge still in the green.",
   },
   "2f": {
@@ -135,7 +135,7 @@ export const sideRooms = {
     name: "Maintenance Lock",
     label: "Port F",
     type: "hazard",
-    signal: "No atmosphere detected",
+    signal: "No life sign detected",
     text: "A maintenance hatch yawns open. The warning light is broken; the vacuum beyond is not.",
   },
   "2g": {
@@ -143,7 +143,7 @@ export const sideRooms = {
     name: "Crew Module G",
     label: "Port G",
     type: "traitor",
-    signal: "One unstable life sign",
+    signal: "Stable life found",
     text: "A uniformed man waits beside the airlock controls. He asks for half a tank of oxygen and promises to tell you who sabotaged the ship.",
   },
   "2h": {
@@ -151,7 +151,7 @@ export const sideRooms = {
     name: "Crew Module H",
     label: "Starboard H",
     type: "survivor",
-    signal: "One stable life sign",
+    signal: "Stable life found",
     text: "A wounded engineer braces the door shut. She needs oxygen, but says she has proof that the AI voice belongs to the saboteur.",
   },
   "2i": {
@@ -159,7 +159,7 @@ export const sideRooms = {
     name: "Emergency Stores",
     label: "Starboard I",
     type: "oxygen",
-    signal: "No life signs",
+    signal: "No life sign detected",
     text: "A full oxygen cylinder has rolled beneath a bunk. Someone left in a hurry.",
   },
 };
@@ -170,6 +170,21 @@ export const junctionRooms = {
 };
 
 export const endingCopy = {
+  oxygen: {
+    kicker: "Oxygen depleted",
+    title: "The final breath",
+    text: "Your suit reserve reaches zero before you can find another cylinder. The corridor dims as the Stranded continues silently through the dark.",
+  },
+  airlock: {
+    kicker: "Airlock breach",
+    title: "Into the void",
+    text: "The outer lock opens before you can retreat. Atmosphere tears away into space, and the Stranded leaves no trace of your final signal.",
+  },
+  betrayed: {
+    kicker: "Bad ending",
+    title: "Backstabbed",
+    text: "The man in 2G takes the oxygen you offer, disables your suit, and drains the rest. He leaves you to die while he claims the escape pod for himself.",
+  },
   bad: {
     kicker: "Bad ending",
     title: "A voice in the dark",

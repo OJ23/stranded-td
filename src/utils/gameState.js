@@ -1,9 +1,9 @@
-import { corridors, MAX_OXYGEN, SAVE_KEY, sideRooms } from "../data/story";
+import { corridors, getCorridor, junctionRooms, MAX_OXYGEN, SAVE_KEY, sideRooms } from "../data/story";
 
 export const initialGameState = {
   currentRoom: "1a",
   previousRoom: null,
-  oxygen: 100,
+  oxygen: 200,
   battery: 0,
   inventory: [],
   visited: ["1a"],
@@ -13,6 +13,7 @@ export const initialGameState = {
   traitorTrusted: false,
   survivorFound: false,
   survivorRescued: false,
+  traitorExposed: false,
   ending: null,
   turn: 0,
   lastEvent: "Emergency wake cycle complete.",
@@ -25,7 +26,7 @@ function withOxygen(state, amount) {
   return {
     ...state,
     oxygen,
-    ending: oxygen <= 0 ? "bad" : state.ending,
+    ending: oxygen <= 0 ? "oxygen" : state.ending,
     lastEvent:
       oxygen <= 0
         ? "Oxygen reserve depleted."
@@ -52,7 +53,7 @@ export function moveTo(state, roomId) {
     return {
       ...next,
       oxygen: 0,
-      ending: "bad",
+      ending: "airlock",
       lastEvent: "Airlock breach. Suit pressure lost.",
     };
   }
@@ -82,16 +83,16 @@ export function collectRoomItem(state) {
   if (room.type === "scanner") {
     return {
       ...state,
-      inventory: [...state.inventory, "scanner", `${room.id}-collected`],
-      lastEvent: "Microwave scanner acquired.",
+      inventory: [...new Set([...state.inventory, "scanner", "engineer-key", `${room.id}-collected`])],
+      lastEvent: "Scanner and manual launch key acquired.",
     };
   }
   if (room.type === "battery") {
     return {
       ...state,
-      battery: state.battery + 5,
+      battery: state.battery + 10,
       inventory: [...state.inventory, `${room.id}-collected`],
-      lastEvent: "Portable cell recovered. Battery +5.",
+      lastEvent: "Portable cell recovered. Battery +10.",
     };
   }
   if (room.type === "oxygen") {
@@ -106,14 +107,21 @@ export function collectRoomItem(state) {
 }
 
 export function scanRoom(state, roomId) {
-  if (!state.inventory.includes("scanner") || state.battery < 1 || state.scanned.includes(roomId)) {
+  const junction = getCorridor(state.currentRoom)?.junction;
+  const roomCanBeScanned = junction && junctionRooms[junction]?.includes(roomId);
+  if (
+    !roomCanBeScanned ||
+    !state.inventory.includes("scanner") ||
+    state.battery < 1 ||
+    state.scanned.includes(roomId)
+  ) {
     return state;
   }
   return {
     ...state,
     battery: state.battery - 1,
-    scanned: [...state.scanned, roomId],
-    lastEvent: `Scan complete: ${sideRooms[roomId].signal}.`,
+    scanned: [...new Set([...state.scanned, roomId])],
+    lastEvent: `${sideRooms[roomId].label} scan: ${sideRooms[roomId].signal}.`,
   };
 }
 
@@ -148,9 +156,10 @@ export function answerSurvivor(state, accept) {
   if (room.type === "traitor") {
     return {
       ...state,
-      oxygen: state.oxygen - 50,
+      oxygen: 0,
       traitorTrusted: true,
-      lastEvent: "He takes the cylinder and tells you to grant the AI command access.",
+      ending: "betrayed",
+      lastEvent: "The traitor backstabbed you and took all your oxygen.",
     };
   }
   return {
@@ -158,8 +167,8 @@ export function answerSurvivor(state, accept) {
     oxygen: state.oxygen - 50,
     survivorFound: true,
     survivorRescued: true,
-    inventory: [...new Set([...state.inventory, "engineer-key"])],
-    lastEvent: "Engineer rescued. She gives you a manual launch key and names the saboteur.",
+    traitorExposed: true,
+    lastEvent: "Engineer rescued. She exposes the saboteur in 2G and warns that 2F is an airlock.",
   };
 }
 
@@ -167,12 +176,15 @@ export function launch(state, trustAI) {
   if (state.currentRoom !== "3a" || state.battery < 2) {
     return { ...state, lastEvent: "The launch cradle needs two battery units." };
   }
+  if (!trustAI && !state.inventory.includes("engineer-key")) {
+    return { ...state, lastEvent: "The manual launch key is still missing." };
+  }
   if (trustAI || (state.traitorTrusted && !state.aiInvestigated && !state.survivorFound)) {
     return { ...state, battery: state.battery - 2, ending: "bad" };
   }
   const good =
     state.survivorRescued &&
-    (state.aiInvestigated || state.commsRepaired) &&
+    (state.traitorExposed || state.aiInvestigated || state.commsRepaired) &&
     state.inventory.includes("engineer-key");
   return {
     ...state,

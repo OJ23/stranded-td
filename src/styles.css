@@ -144,6 +144,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--acid); outline-
 }
 
 .header-actions { display: flex; align-items: center; gap: 28px; }
+.header-controls { display: flex; align-items: center; gap: 16px; }
 .system-state { color: var(--muted); }
 .system-state i { display: inline-block; width: 6px; height: 6px; background: var(--danger); border-radius: 50%; margin-right: 8px; box-shadow: 0 0 10px var(--danger); }
 .text-button { border: 0; background: transparent; color: var(--muted); font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: .12em; cursor: pointer; }
@@ -199,7 +200,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--acid); outline-
 .game-stage { min-width: 0; }
 .route-line { height: 30px; display: flex; align-items: center; gap: 12px; color: var(--dim); margin-bottom: 18px; }
 .route-line i { display: block; width: 42px; height: 1px; background: var(--line); }
-.route-line strong { color: var(--acid); font-weight: 400; }
+.route-line .is-current { color: var(--acid); font-weight: 500; }
 .scene-card { border: 1px solid var(--line); background: linear-gradient(145deg, rgba(18,33,34,.83), rgba(7,16,18,.83)); min-height: 610px; }
 .scene-card__topline { height: 48px; border-bottom: 1px solid var(--line); padding: 0 22px; display: flex; align-items: center; justify-content: space-between; color: var(--dim); }
 .room-code { color: var(--acid); }
@@ -235,6 +236,23 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--acid); outline-
 .choice--signal .choice__index, .choice--signal .choice__arrow { color: var(--acid); }
 .choice--danger .choice__index, .choice--danger .choice__arrow { color: var(--danger); }
 .choice--quiet { background: transparent; }
+.junction-choices { display: grid; gap: 8px; margin-bottom: 8px; }
+.junction-choice-row { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, .75fr); }
+.junction-choice-row .choice { border-bottom: 1px solid var(--line); }
+.junction-choice-row .choice + .choice { border-left: 0; }
+.junction-choice-row > .choice:only-child { grid-column: 1 / -1; }
+.scan-result {
+  min-height: 66px;
+  border: 1px solid rgba(215,255,85,.3);
+  border-left: 0;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(215,255,85,.045);
+}
+.scan-result span { color: var(--dim); font: 8px var(--mono); text-transform: uppercase; letter-spacing: .08em; }
+.scan-result strong { color: var(--acid); font: 9px/1.4 var(--mono); font-weight: 400; margin-top: 6px; }
 .autosave-note { position: absolute; bottom: 18px; right: clamp(24px, 5vw, 76px); color: var(--dim); margin: 0; }
 
 .dialog-backdrop { position: fixed; inset: 0; z-index: 20; background: rgba(1,5,6,.8); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 20px; }
@@ -245,10 +263,10 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--acid); outline-
 
 .ending { display: grid; place-items: center; padding: 40px; }
 .ending::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle at 50%, rgba(215,255,85,.1), transparent 43%); }
-.ending--bad::before { background: radial-gradient(circle at 50%, rgba(255,111,89,.13), transparent 43%); }
+.ending--bad::before, .ending--oxygen::before, .ending--airlock::before, .ending--betrayed::before { background: radial-gradient(circle at 50%, rgba(255,111,89,.13), transparent 43%); }
 .ending__content { max-width: 680px; position: relative; z-index: 1; text-align: center; }
 .ending__kicker { color: var(--acid); font: 11px var(--mono); text-transform: uppercase; letter-spacing: .2em; }
-.ending--bad .ending__kicker { color: var(--danger); }
+.ending--bad .ending__kicker, .ending--oxygen .ending__kicker, .ending--airlock .ending__kicker, .ending--betrayed .ending__kicker { color: var(--danger); }
 .ending h1 { font-size: clamp(54px, 9vw, 104px); letter-spacing: -.07em; line-height: .95; margin: 20px 0 28px; font-weight: 500; }
 .ending__content > p:not(.ending__kicker) { color: #a7b2ae; line-height: 1.8; }
 .ending__actions { display: flex; justify-content: center; gap: 12px; margin-top: 38px; }

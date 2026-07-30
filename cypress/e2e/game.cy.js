@@ -5,6 +5,6 @@ describe("Stranded", () => {
     cy.contains("Cryo Bay");
     cy.contains("Advance forward").click();
     cy.contains("Med Transit");
-    cy.contains("90").should("be.visible");
+    cy.contains("190").should("be.visible");
   });
 });

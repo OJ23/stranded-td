@@ -1,0 +1,192 @@
+export const SAVE_KEY = "storyGameSave";
+export const MAX_OXYGEN = 200;
+
+export const corridors = [
+  {
+    id: "1a",
+    deck: 1,
+    name: "Cryo Bay",
+    eyebrow: "Deck 01 / Recovery",
+    text: "Cold vapor crawls across the floor. Your pod hangs open behind you, its glass starred from impact. The ship AI insists there is one other survivor.",
+    objective: "Restore your bearings and move toward the command deck.",
+  },
+  {
+    id: "1b",
+    deck: 1,
+    name: "Med Transit",
+    eyebrow: "Deck 01 / Medical",
+    text: "Emergency strips paint the corridor in weak amber. A trail of dried condensation leads forward, then disappears beneath a sealed bulkhead.",
+    objective: "Keep moving. Every sealed door costs air.",
+  },
+  {
+    id: "1c",
+    deck: 1,
+    name: "Service Junction",
+    eyebrow: "Deck 01 / Junction",
+    text: "The passage divides around a damaged service hub. Four side rooms remain powered, though the labels blink in and out.",
+    objective: "Search for supplies, or conserve oxygen and press on.",
+    junction: "deck1",
+  },
+  {
+    id: "1d",
+    deck: 1,
+    name: "Cooling Spine",
+    eyebrow: "Deck 01 / Engineering",
+    text: "The hull groans around the coolant spine. Something heavy struck the wall here from the inside.",
+    objective: "Reach the communications relay at the end of the deck.",
+  },
+  {
+    id: "1e",
+    deck: 1,
+    name: "Comms Relay",
+    eyebrow: "Deck 01 / Communications",
+    text: "The relay is dark but intact. Its emergency cells have been stripped; a portable battery could wake it long enough to send a burst.",
+    objective: "Repair the relay if you have power, then take the lift.",
+    action: "comms",
+  },
+  {
+    id: "2a",
+    deck: 2,
+    name: "Habitation Ring",
+    eyebrow: "Deck 02 / Crew",
+    text: "The lift opens onto abandoned crew quarters. The AI lowers its voice: the survivor is close, and frightened.",
+    objective: "Find out who else is aboard.",
+  },
+  {
+    id: "2b",
+    deck: 2,
+    name: "Observation Link",
+    eyebrow: "Deck 02 / Observation",
+    text: "Beyond a fractured viewport, the ship turns slowly above a blue-white moon. No rescue lights answer your signal.",
+    objective: "Cross before the shutters fail.",
+  },
+  {
+    id: "2c",
+    deck: 2,
+    name: "Crew Junction",
+    eyebrow: "Deck 02 / Junction",
+    text: "Four crew modules branch from the central ring. The AI urges you toward the left-hand doors, too quickly to sound impartial.",
+    objective: "Trust the AI, scan the rooms, or choose for yourself.",
+    junction: "deck2",
+    action: "ai",
+  },
+  {
+    id: "2d",
+    deck: 2,
+    name: "Security Causeway",
+    eyebrow: "Deck 02 / Security",
+    text: "A red authorization beam sweeps the narrow causeway. The command deck is one level above.",
+    objective: "Carry what you learned to the bridge.",
+  },
+  {
+    id: "2e",
+    deck: 2,
+    name: "Command Lift",
+    eyebrow: "Deck 02 / Lift",
+    text: "The lift cage waits with its doors open. A scratched message beside the controls reads: THE VOICE IS NOT THE SHIP.",
+    objective: "Ascend to the escape deck.",
+  },
+  {
+    id: "3a",
+    deck: 3,
+    name: "Escape Control",
+    eyebrow: "Deck 03 / Ascension",
+    text: "One escape pod remains. The launch cradle needs two battery units, and the AI is demanding command access before it will release the clamps.",
+    objective: "Decide who to trust, then leave the Stranded behind.",
+    ending: true,
+  },
+];
+
+export const sideRooms = {
+  "1f": {
+    id: "1f",
+    name: "Outer Lock",
+    label: "Port F",
+    type: "hazard",
+    signal: "No atmosphere detected",
+    text: "The inner door seals behind you. Before you can turn, the outer lock cycles open into the dark.",
+  },
+  "1g": {
+    id: "1g",
+    name: "Supply Store",
+    label: "Port G",
+    type: "scanner",
+    signal: "No life signs",
+    text: "Shelves lie overturned beneath a faded STORE stencil. A microwave scanner still blinks inside its charging cradle.",
+  },
+  "1h": {
+    id: "1h",
+    name: "Auxiliary Power",
+    label: "Starboard H",
+    type: "battery",
+    signal: "No life signs",
+    text: "A bank of dead capacitors surrounds one intact portable cell.",
+  },
+  "1i": {
+    id: "1i",
+    name: "Emergency Stores",
+    label: "Starboard I",
+    type: "oxygen",
+    signal: "No life signs",
+    text: "An emergency cylinder sits behind cracked safety glass, its gauge still in the green.",
+  },
+  "2f": {
+    id: "2f",
+    name: "Maintenance Lock",
+    label: "Port F",
+    type: "hazard",
+    signal: "No atmosphere detected",
+    text: "A maintenance hatch yawns open. The warning light is broken; the vacuum beyond is not.",
+  },
+  "2g": {
+    id: "2g",
+    name: "Crew Module G",
+    label: "Port G",
+    type: "traitor",
+    signal: "One unstable life sign",
+    text: "A uniformed man waits beside the airlock controls. He asks for half a tank of oxygen and promises to tell you who sabotaged the ship.",
+  },
+  "2h": {
+    id: "2h",
+    name: "Crew Module H",
+    label: "Starboard H",
+    type: "survivor",
+    signal: "One stable life sign",
+    text: "A wounded engineer braces the door shut. She needs oxygen, but says she has proof that the AI voice belongs to the saboteur.",
+  },
+  "2i": {
+    id: "2i",
+    name: "Emergency Stores",
+    label: "Starboard I",
+    type: "oxygen",
+    signal: "No life signs",
+    text: "A full oxygen cylinder has rolled beneath a bunk. Someone left in a hurry.",
+  },
+};
+
+export const junctionRooms = {
+  deck1: ["1f", "1g", "1h", "1i"],
+  deck2: ["2f", "2g", "2h", "2i"],
+};
+
+export const endingCopy = {
+  bad: {
+    kicker: "Bad ending",
+    title: "A voice in the dark",
+    text: "You hand control to the voice. The pod doors lock, the oxygen vents, and the saboteur watches through the bridge cameras until your signal disappears.",
+  },
+  good: {
+    kicker: "Good ending",
+    title: "Two heartbeats",
+    text: "You expose the false AI, release the clamps manually, and leave with the engineer beside you. Behind the pod, the Stranded turns silently into dawn.",
+  },
+  neutral: {
+    kicker: "Neutral ending",
+    title: "No answers",
+    text: "You force the pod loose and escape alone. The ship dwindles behind you, carrying its last secrets—and perhaps its last survivor—into the dark.",
+  },
+};
+
+export function getCorridor(id) {
+  return corridors.find((room) => room.id === id);
+}

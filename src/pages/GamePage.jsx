@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import ChoiceButton from "../components/ChoiceButton";
 import ConfirmDialog from "../components/ConfirmDialog";
 import EndingScreen from "../components/EndingScreen";
 import GameHeader from "../components/GameHeader";
+import MovementStage from "../components/MovementStage";
 import SceneCard from "../components/SceneCard";
 import StatusPanel from "../components/StatusPanel";
 import { getCorridor, junctionRooms, sideRooms } from "../data/story";
@@ -24,6 +25,27 @@ import {
   scanRoom,
 } from "../utils/gameState";
 
+const failedEndings = new Set(["oxygen", "airlock", "betrayed", "bad"]);
+
+function getSceneRoom(room, state) {
+  if (state.currentRoom === "2h" && state.survivorFound) {
+    return {
+      ...room,
+      text: "The wounded engineer reveals that the man in 2G is the saboteur who incapacitated her. She warns you not to enter 2G and confirms that 2F is an exposed airlock. With your oxygen shared, she can now reach the escape pod with you.",
+      objective: "Avoid rooms 2F and 2G. Reach the escape deck together.",
+    };
+  }
+
+  if (state.currentRoom === "3a" && state.battery < 2) {
+    return {
+      ...room,
+      objective: `Insufficient battery: ${state.battery}/2 units available. Go back to Auxiliary Power in Starboard H to recover the power cell.`,
+    };
+  }
+
+  return room;
+}
+
 export default function GamePage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -32,16 +54,12 @@ export default function GamePage() {
   );
   const [restartOpen, setRestartOpen] = useState(false);
   const [saveConfirmed, setSaveConfirmed] = useState(false);
+  const [movement, setMovement] = useState(null);
+  const movementActionRef = useRef(null);
+  const movementStageRef = useRef(null);
   const corridor = getCorridor(state.currentRoom);
   const room = corridor ?? sideRooms[state.currentRoom];
-  const sceneRoom =
-    state.currentRoom === "2h" && state.survivorFound
-      ? {
-          ...room,
-          text: "The wounded engineer reveals that the man in 2G is the saboteur who incapacitated her. She warns you not to enter 2G and confirms that 2F is an exposed airlock. With your oxygen shared, she can now reach the escape pod with you.",
-          objective: "Avoid rooms 2F and 2G. Reach the escape deck together.",
-        }
-      : room;
+  const sceneRoom = getSceneRoom(room, state);
 
   useEffect(() => {
     saveGame(state);
@@ -55,6 +73,26 @@ export default function GamePage() {
 
   const update = useCallback((fn, ...args) => {
     setState((current) => fn(current, ...args));
+  }, []);
+
+  const performMovement = useCallback((direction, action, targetRoomId = null) => {
+    if (movementActionRef.current) return;
+    const stage = movementStageRef.current;
+    if (stage) {
+      const bounds = stage.getBoundingClientRect();
+      const stageIsVisible = bounds.top >= 0 && bounds.bottom <= window.innerHeight;
+      if (!stageIsVisible) stage.scrollIntoView?.({ behavior: "auto", block: "center" });
+    }
+    movementActionRef.current = action;
+    setMovement({ direction, targetRoomId });
+  }, []);
+
+  const finishMovement = useCallback((event) => {
+    if (event.target !== event.currentTarget || !movementActionRef.current) return;
+    const action = movementActionRef.current;
+    movementActionRef.current = null;
+    setMovement(null);
+    action();
   }, []);
 
   const choices = useMemo(() => {
@@ -88,7 +126,7 @@ export default function GamePage() {
       result.push({
         title: "Return to the junction",
         detail: "Movement costs 10 O₂",
-        action: () => update(leaveSideRoom),
+        action: () => performMovement("backward", () => update(leaveSideRoom)),
       });
       return result;
     }
@@ -99,8 +137,8 @@ export default function GamePage() {
         const scanned = state.scanned.includes(roomId);
         result.push({
           title: `Enter ${target.label}`,
-          detail: scanned ? target.signal : "Scan pending",
-          action: () => update(moveTo, roomId),
+          detail: scanned ? target.scanClue : "Scan pending",
+          action: () => performMovement(target.direction, () => update(moveTo, roomId), roomId),
           variant: scanned && target.type === "hazard" ? "danger" : scanned && ["survivor", "traitor"].includes(target.type) ? "signal" : "default",
           roomId,
         });
@@ -148,41 +186,45 @@ export default function GamePage() {
         variant: "danger",
       });
       result.push({
-        title: "Retrace your steps",
-        detail: "Return to Deck 02 · movement costs 10 O₂",
-        action: () => update(retreat),
-        variant: "quiet",
+        title: state.battery < 2 ? "Go back for battery" : "Retrace your steps",
+        detail: state.battery < 2
+          ? "Find Auxiliary Power at Starboard H · movement costs 10 O₂"
+          : "Return to Deck 02 · movement costs 10 O₂",
+        action: () => performMovement("backward", () => update(retreat)),
+        variant: state.battery < 2 ? "signal" : "quiet",
       });
     } else {
       result.push({
         title: "Advance forward",
         detail: "Movement costs 10 O₂",
-        action: () => update(advance),
+        action: () => performMovement("forward", () => update(advance)),
         variant: "signal",
       });
       if (state.currentRoom !== "1a") {
         result.push({
           title: "Go back",
           detail: "Movement costs 10 O₂",
-          action: () => update(retreat),
+          action: () => performMovement("backward", () => update(retreat)),
           variant: "quiet",
         });
       }
     }
     return result;
-  }, [room, state, update]);
+  }, [performMovement, room, state, update]);
 
   useEffect(() => {
     const onKeyDown = (event) => {
-      if (restartOpen || event.target.matches("button, a")) return;
+      if (restartOpen || movement || event.target.matches("button, a")) return;
       const choice = choices[Number(event.key) - 1];
       if (choice && !choice.disabled) choice.action();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [choices, restartOpen]);
+  }, [choices, movement, restartOpen]);
 
   const restart = () => {
+    movementActionRef.current = null;
+    setMovement(null);
     clearSave();
     setState({ ...initialGameState });
     setRestartOpen(false);
@@ -209,7 +251,7 @@ export default function GamePage() {
       <EndingScreen
         ending={state.ending}
         onRestart={restart}
-        onContinue={continueExploring}
+        onContinue={failedEndings.has(state.ending) ? undefined : continueExploring}
       />
     );
   }
@@ -231,6 +273,15 @@ export default function GamePage() {
             <i />
             <span className={routeStage === "Ascension" ? "is-current" : ""}>Ascension</span>
           </div>
+          <MovementStage
+            stageRef={movementStageRef}
+            room={sceneRoom}
+            exits={room.junction ? junctionRooms[room.junction].map((roomId) => sideRooms[roomId]) : []}
+            direction={movement?.direction}
+            targetRoomId={movement?.targetRoomId}
+            moving={Boolean(movement)}
+            onAnimationEnd={finishMovement}
+          />
           <SceneCard room={sceneRoom}>
             <div className="choices" aria-label="Available choices">
               <div className="choices__heading">
@@ -245,12 +296,21 @@ export default function GamePage() {
                         .map((choice, index) => ({ choice, index }))
                         .filter(({ choice }) => choice.roomId === roomId)
                         .map(({ choice, index }) => (
-                          <ChoiceButton key={choice.title} index={index + 1} {...choice} onClick={choice.action} />
+                          <ChoiceButton
+                            key={choice.title}
+                            index={index + 1}
+                            {...choice}
+                            disabled={Boolean(movement) || choice.disabled}
+                            onClick={choice.action}
+                          />
                         ))}
                       {state.scanned.includes(roomId) && (
                         <div className="scan-result" role="status">
                           <span>{sideRooms[roomId].label} scan result</span>
-                          <strong>{sideRooms[roomId].signal}</strong>
+                          <strong>
+                            {sideRooms[roomId].signal}<br />
+                            {sideRooms[roomId].scanClue}
+                          </strong>
                         </div>
                       )}
                     </div>
@@ -261,7 +321,13 @@ export default function GamePage() {
                 .map((choice, index) => ({ choice, index }))
                 .filter(({ choice }) => !room.junction || !choice.roomId)
                 .map(({ choice, index }) => (
-                  <ChoiceButton key={`${choice.title}-${index}`} index={index + 1} {...choice} onClick={choice.action} />
+                  <ChoiceButton
+                    key={`${choice.title}-${index}`}
+                    index={index + 1}
+                    {...choice}
+                    disabled={Boolean(movement) || choice.disabled}
+                    onClick={choice.action}
+                  />
                 ))}
             </div>
           </SceneCard>

@@ -1,11 +1,14 @@
+import { getCorridor, sideRooms } from "../data/story";
+
 export default function StatusPanel({ state }) {
   const oxygenPercent = Math.min((state.oxygen / 200) * 100, 100);
   const reserve = state.oxygen <= 30 ? "Critical" : state.oxygen <= 70 ? "Low" : "Stable";
+  const currentRoom = getCorridor(state.currentRoom) ?? sideRooms[state.currentRoom];
 
   return (
     <aside className="status-panel" aria-label="Player status">
       <div className="panel-label">
-        <span>Suit telemetry</span>
+        <span>Survival telemetry</span>
         <span>Live</span>
       </div>
 
@@ -32,6 +35,12 @@ export default function StatusPanel({ state }) {
           <span>Deck</span>
           <strong>0{state.currentRoom.charAt(0)}</strong>
         </div>
+      </div>
+
+      <div className="current-location">
+        <span>Current location</span>
+        <strong>{currentRoom?.name ?? "Unknown sector"}</strong>
+        <small>{currentRoom?.label ?? state.currentRoom.toUpperCase()}</small>
       </div>
 
       <div className="inventory">

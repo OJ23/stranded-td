@@ -10,8 +10,12 @@ export default function EndingScreen({ ending, onRestart, onContinue }) {
         <h1>{copy.title}</h1>
         <p>{copy.text}</p>
         <div className="ending__actions">
-          <button className="primary-button" type="button" onClick={onRestart}>Restart story</button>
-          <button className="secondary-button" type="button" onClick={onContinue}>Continue exploring</button>
+          <button className="primary-button" type="button" onClick={onRestart}>
+            {onContinue ? "Restart story" : "Start from beginning"}
+          </button>
+          {onContinue && (
+            <button className="secondary-button" type="button" onClick={onContinue}>Continue exploring</button>
+          )}
         </div>
       </div>
       <span className="ending__code">END / {ending.toUpperCase()}</span>

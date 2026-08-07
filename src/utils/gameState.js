@@ -121,7 +121,7 @@ export function scanRoom(state, roomId) {
     ...state,
     battery: state.battery - 1,
     scanned: [...new Set([...state.scanned, roomId])],
-    lastEvent: `${sideRooms[roomId].label} scan: ${sideRooms[roomId].signal}.`,
+    lastEvent: `${sideRooms[roomId].label} scan: ${sideRooms[roomId].signal}. ${sideRooms[roomId].scanClue}`,
   };
 }
 

@@ -43,6 +43,7 @@ describe("game state", () => {
     expect(scanned.battery).toBe(1);
     expect(scanned.scanned).toEqual(["1f"]);
     expect(scanned.lastEvent).toContain("No life sign detected");
+    expect(scanned.lastEvent).toContain("open to vacuum");
     expect(scanRoom(scanned, "1f").battery).toBe(1);
     const secondScan = scanRoom(scanned, "1g");
     expect(secondScan.scanned).toEqual(["1f", "1g"]);
@@ -58,8 +59,10 @@ describe("game state", () => {
     };
     const firstScan = scanRoom(scannerState, "2g");
     expect(firstScan.lastEvent).toContain("Stable life found");
+    expect(firstScan.lastEvent).toContain("waiting beside the airlock controls");
     const secondScan = scanRoom(firstScan, "2h");
     expect(secondScan.lastEvent).toContain("Stable life found");
+    expect(secondScan.lastEvent).toContain("injured adult");
   });
 
   it("kills the player in an airlock", () => {

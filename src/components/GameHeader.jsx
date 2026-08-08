@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 
-export default function GameHeader({ onRestart, onSave, saveConfirmed }) {
+export default function GameHeader({ onRestart, onSave, saveConfirmed, audioMuted, onToggleAudio }) {
   return (
     <header className="game-header">
       <Link className="wordmark wordmark--small" to="/" aria-label="Stranded home">
@@ -11,6 +11,14 @@ export default function GameHeader({ onRestart, onSave, saveConfirmed }) {
           <i aria-hidden="true" /> System unstable
         </span>
         <div className="header-controls">
+          <button
+            className="text-button"
+            type="button"
+            aria-pressed={audioMuted}
+            onClick={onToggleAudio}
+          >
+            Sound {audioMuted ? "off" : "on"}
+          </button>
           <button className="text-button" type="button" onClick={onSave}>
             {saveConfirmed ? "Saved" : "Save"}
           </button>

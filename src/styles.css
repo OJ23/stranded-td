@@ -350,8 +350,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--acid); outline-
 .movement-stage__status { position: absolute; right: 18px; top: 18px; color: var(--acid); }
 .player-character--forward { animation: walk-forward 650ms ease-in forwards; }
 .player-character--backward { animation: walk-backward 650ms ease-in forwards; }
-.player-character--left { animation: walk-left 350ms ease-in forwards; }
-.player-character--right { animation: walk-right 350ms ease-in forwards; }
+.player-character--left { animation: walk-left 900ms ease-in-out forwards; }
+.player-character--right { animation: walk-right 900ms ease-in-out forwards; }
 @keyframes walk-forward {
   to { transform: translateX(-50%) translateY(-75px) scale(.72); opacity: .4; }
 }

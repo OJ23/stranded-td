@@ -40,7 +40,7 @@ export default function HomePage() {
 
       <footer className="home-footer">
         <span>O₂ supply: critical</span>
-        <span>Audio: not required</span>
+        <span>Synthesized audio: optional</span>
         <span>Use 1–9 to choose</span>
       </footer>
     </main>

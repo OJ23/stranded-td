@@ -24,6 +24,7 @@ import {
   saveGame,
   scanRoom,
 } from "../utils/gameState";
+import { sounds } from "../utils/sounds";
 
 const failedEndings = new Set(["oxygen", "airlock", "betrayed", "bad"]);
 
@@ -54,6 +55,7 @@ export default function GamePage() {
   );
   const [restartOpen, setRestartOpen] = useState(false);
   const [saveConfirmed, setSaveConfirmed] = useState(false);
+  const [audioMuted, setAudioMuted] = useState(() => sounds.isMuted());
   const [movement, setMovement] = useState(null);
   const movementActionRef = useRef(null);
   const movementStageRef = useRef(null);
@@ -107,6 +109,7 @@ export default function GamePage() {
           title: side.type === "scanner" ? "Take scanner and launch key" : side.type === "battery" ? "Recover the power cell" : "Refill suit oxygen",
           detail: side.type === "oxygen" ? "Restore up to 100 O₂" : side.type === "battery" ? "Add 10 battery units" : "Unlock scans and manual launch",
           action: () => update(collectRoomItem),
+          sound: "pickup",
         });
       }
       if (["survivor", "traitor"].includes(side.type) && !(side.type === "survivor" ? state.survivorFound : state.traitorTrusted)) {
@@ -127,6 +130,7 @@ export default function GamePage() {
         title: "Return to the junction",
         detail: "Movement costs 10 O₂",
         action: () => performMovement("backward", () => update(leaveSideRoom)),
+        sound: "footstep",
       });
       return result;
     }
@@ -139,6 +143,7 @@ export default function GamePage() {
           title: `Enter ${target.label}`,
           detail: scanned ? target.scanClue : "Scan pending",
           action: () => performMovement(target.direction, () => update(moveTo, roomId), roomId),
+          sound: "airlock",
           variant: scanned && target.type === "hazard" ? "danger" : scanned && ["survivor", "traitor"].includes(target.type) ? "signal" : "default",
           roomId,
         });
@@ -175,6 +180,7 @@ export default function GamePage() {
         title: "Use the manual launch",
         detail: !state.inventory.includes("engineer-key") ? "Launch key required" : "Costs 2 battery · deny AI access",
         action: () => update(launch, false),
+        sound: "alarm",
         disabled: state.battery < 2 || !state.inventory.includes("engineer-key"),
         variant: "signal",
       });
@@ -182,6 +188,7 @@ export default function GamePage() {
         title: "Trust the AI",
         detail: "Grant command access and launch",
         action: () => update(launch, true),
+        sound: "alarm",
         disabled: state.battery < 2,
         variant: "danger",
       });
@@ -191,6 +198,7 @@ export default function GamePage() {
           ? "Find Auxiliary Power at Starboard H · movement costs 10 O₂"
           : "Return to Deck 02 · movement costs 10 O₂",
         action: () => performMovement("backward", () => update(retreat)),
+        sound: "footstep",
         variant: state.battery < 2 ? "signal" : "quiet",
       });
     } else {
@@ -198,6 +206,7 @@ export default function GamePage() {
         title: "Advance forward",
         detail: "Movement costs 10 O₂",
         action: () => performMovement("forward", () => update(advance)),
+        sound: "footstep",
         variant: "signal",
       });
       if (state.currentRoom !== "1a") {
@@ -205,6 +214,7 @@ export default function GamePage() {
           title: "Go back",
           detail: "Movement costs 10 O₂",
           action: () => performMovement("backward", () => update(retreat)),
+          sound: "footstep",
           variant: "quiet",
         });
       }
@@ -212,15 +222,21 @@ export default function GamePage() {
     return result;
   }, [performMovement, room, state, update]);
 
+  const activateChoice = useCallback((choice) => {
+    sounds.startAmbientHum();
+    sounds.play(choice.sound ?? "click");
+    choice.action();
+  }, []);
+
   useEffect(() => {
     const onKeyDown = (event) => {
       if (restartOpen || movement || event.target.matches("button, a")) return;
       const choice = choices[Number(event.key) - 1];
-      if (choice && !choice.disabled) choice.action();
+      if (choice && !choice.disabled) activateChoice(choice);
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [choices, movement, restartOpen]);
+  }, [activateChoice, choices, movement, restartOpen]);
 
   const restart = () => {
     movementActionRef.current = null;
@@ -231,8 +247,16 @@ export default function GamePage() {
   };
 
   const save = () => {
+    sounds.startAmbientHum();
+    sounds.playClick();
     saveGame(state);
     setSaveConfirmed(true);
+  };
+
+  const toggleAudio = () => {
+    const muted = sounds.toggleMute();
+    setAudioMuted(muted);
+    if (!muted) sounds.playClick();
   };
 
   const continueExploring = () => {
@@ -259,9 +283,15 @@ export default function GamePage() {
   return (
     <div className="game-shell">
       <GameHeader
-        onRestart={() => setRestartOpen(true)}
+        onRestart={() => {
+          sounds.startAmbientHum();
+          sounds.playClick();
+          setRestartOpen(true);
+        }}
         onSave={save}
         saveConfirmed={saveConfirmed}
+        audioMuted={audioMuted}
+        onToggleAudio={toggleAudio}
       />
       <main className="game-layout">
         <StatusPanel state={state} />
@@ -301,7 +331,7 @@ export default function GamePage() {
                             index={index + 1}
                             {...choice}
                             disabled={Boolean(movement) || choice.disabled}
-                            onClick={choice.action}
+                            onClick={() => activateChoice(choice)}
                           />
                         ))}
                       {state.scanned.includes(roomId) && (
@@ -326,7 +356,7 @@ export default function GamePage() {
                     index={index + 1}
                     {...choice}
                     disabled={Boolean(movement) || choice.disabled}
-                    onClick={choice.action}
+                    onClick={() => activateChoice(choice)}
                   />
                 ))}
             </div>

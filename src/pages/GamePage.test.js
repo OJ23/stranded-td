@@ -126,7 +126,8 @@ describe("character movement", () => {
     renderGame({ currentRoom: "3a", previousRoom: "2e", oxygen: 80, battery: 1 });
 
     expect(container.textContent).toContain("Insufficient battery: 1/2 units available");
-    expect(container.textContent).toContain("Go back to Auxiliary Power in Starboard H");
+    expect(container.textContent).toContain("Batteries are aboard the ship somewhere. Find them.");
+    expect(container.textContent).not.toContain("Auxiliary Power in Starboard H");
     expect(findButton("Use the manual launch").disabled).toBe(true);
     expect(findButton("Trust the AI").disabled).toBe(true);
 

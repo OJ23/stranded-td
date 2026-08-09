@@ -1,9 +1,28 @@
+const endingSoundFiles = import.meta.glob("../../sounds/**/*.mp3", {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+
+const endingSounds = Object.entries(endingSoundFiles).reduce((groups, [path, url]) => {
+  const category = path.match(/sounds\/(bad|good|neutral) end\//)?.[1];
+  if (category) groups[category].push(url);
+  return groups;
+}, { bad: [], good: [], neutral: [] });
+
+const failedEndings = new Set(["oxygen", "airlock", "betrayed", "bad"]);
+
+export function getEndingSoundCategory(ending) {
+  return failedEndings.has(ending) ? "bad" : ending;
+}
+
 class SoundController {
   constructor() {
     this.ctx = null;
     this.muted = false;
     this.ambientGain = null;
     this.ambientOsc = null;
+    this.endingAudio = null;
   }
 
   init() {
@@ -107,6 +126,25 @@ class SoundController {
     osc.stop(now + 0.3);
   }
 
+  playEnding(ending) {
+    this.stopEnding();
+    if (this.muted || typeof Audio === "undefined") return;
+
+    const choices = endingSounds[getEndingSoundCategory(ending)] ?? [];
+    if (!choices.length) return;
+
+    const url = choices[Math.floor(Math.random() * choices.length)];
+    this.endingAudio = new Audio(url);
+    this.endingAudio.play().catch(() => {});
+  }
+
+  stopEnding() {
+    if (!this.endingAudio) return;
+    this.endingAudio.pause();
+    this.endingAudio.currentTime = 0;
+    this.endingAudio = null;
+  }
+
   startAmbientHum() {
     if (this.muted || this.ambientOsc || !this.init()) return;
     const now = this.ctx.currentTime;
@@ -127,6 +165,7 @@ class SoundController {
     if (this.ambientGain && this.ctx) {
       this.ambientGain.gain.setTargetAtTime(this.muted ? 0 : 0.035, this.ctx.currentTime, 0.02);
     }
+    if (this.endingAudio) this.endingAudio.muted = this.muted;
     if (!this.muted) this.startAmbientHum();
     return this.muted;
   }

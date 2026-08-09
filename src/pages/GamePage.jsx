@@ -40,7 +40,7 @@ function getSceneRoom(room, state) {
   if (state.currentRoom === "3a" && state.battery < 2) {
     return {
       ...room,
-      objective: `Insufficient battery: ${state.battery}/2 units available. Go back to Auxiliary Power in Starboard H to recover the power cell.`,
+      objective: `Insufficient battery: ${state.battery}/2 units available. Batteries are aboard the ship somewhere. Find them.`,
     };
   }
 
@@ -195,7 +195,7 @@ export default function GamePage() {
       result.push({
         title: state.battery < 2 ? "Go back for battery" : "Retrace your steps",
         detail: state.battery < 2
-          ? "Find Auxiliary Power at Starboard H · movement costs 10 O₂"
+          ? "Search the ship · movement costs 10 O₂"
           : "Return to Deck 02 · movement costs 10 O₂",
         action: () => performMovement("backward", () => update(retreat)),
         sound: "footstep",

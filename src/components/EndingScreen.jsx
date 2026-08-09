@@ -1,7 +1,15 @@
+import { useEffect } from "react";
 import { endingCopy } from "../data/story";
+import { sounds } from "../utils/sounds";
 
 export default function EndingScreen({ ending, onRestart, onContinue }) {
   const copy = endingCopy[ending];
+
+  useEffect(() => {
+    sounds.playEnding(ending);
+    return () => sounds.stopEnding();
+  }, [ending]);
+
   return (
     <main className={`ending ending--${ending}`}>
       <div className="ending__noise" />

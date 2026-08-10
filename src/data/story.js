@@ -1,5 +1,5 @@
 export const SAVE_KEY = "storyGameSave";
-export const MAX_OXYGEN = 200;
+export const STARTING_OXYGEN = 200;
 
 export const corridors = [
   {

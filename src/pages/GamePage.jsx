@@ -107,7 +107,7 @@ export default function GamePage() {
       if (["scanner", "battery", "oxygen"].includes(side.type) && !collected) {
         result.push({
           title: side.type === "scanner" ? "Take scanner and launch key" : side.type === "battery" ? "Recover the power cell" : "Refill suit oxygen",
-          detail: side.type === "oxygen" ? "Restore up to 100 O₂" : side.type === "battery" ? "Add 10 battery units" : "Unlock scans and manual launch",
+          detail: side.type === "oxygen" ? "Add 100 O₂" : side.type === "battery" ? "Add 10 battery units" : "Unlock scans and manual launch",
           action: () => update(collectRoomItem),
           sound: "pickup",
         });

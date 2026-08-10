@@ -1,7 +1,8 @@
-import { getCorridor, sideRooms } from "../data/story";
+import { getCorridor, sideRooms, STARTING_OXYGEN } from "../data/story";
 
 export default function StatusPanel({ state }) {
-  const oxygenPercent = Math.min((state.oxygen / 200) * 100, 100);
+  const oxygenMeterMax = Math.max(STARTING_OXYGEN, state.oxygen);
+  const oxygenPercent = Math.min((state.oxygen / STARTING_OXYGEN) * 100, 100);
   const reserve = state.oxygen <= 30 ? "Critical" : state.oxygen <= 70 ? "Low" : "Stable";
   const currentRoom = getCorridor(state.currentRoom) ?? sideRooms[state.currentRoom];
 
@@ -22,7 +23,7 @@ export default function StatusPanel({ state }) {
           <p className={`metric-state metric-state--${reserve.toLowerCase()}`}>{reserve}</p>
         </div>
       </section>
-      <div className="meter" role="meter" aria-label="Oxygen" aria-valuenow={state.oxygen} aria-valuemin="0" aria-valuemax="200">
+      <div className="meter" role="meter" aria-label="Oxygen" aria-valuenow={state.oxygen} aria-valuemin="0" aria-valuemax={oxygenMeterMax}>
         <span style={{ width: `${oxygenPercent}%` }} />
       </div>
 

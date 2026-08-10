@@ -468,6 +468,126 @@ button:focus-visible, a:focus-visible { outline: 2px solid var(--acid); outline-
   .junction-choices { gap: 5px; margin-bottom: 5px; }
 }
 
+@media (min-width: 1200px) {
+  .game-layout {
+    width: min(1560px, calc(100% - 48px));
+    grid-template-columns: 224px minmax(0, 1fr);
+    gap: clamp(34px, 3vw, 52px);
+    padding: 28px 0 54px;
+  }
+  .status-panel { padding: 18px; }
+  .oxygen-block { padding-top: 20px; }
+  .meter { margin: 13px 0 20px; }
+  .status-grid > div, .current-location { padding-top: 14px; padding-bottom: 14px; }
+  .inventory { padding-top: 16px; }
+  .signal-log { margin-top: 10px; padding-top: 14px; }
+  .route-line { height: 24px; margin-bottom: 10px; }
+  .movement-stage { height: clamp(190px, 23vh, 225px); }
+  .movement-stage__vanishing-point { top: 28px; height: 120px; }
+  .player-character {
+    bottom: 22px;
+    transform: translateX(-50%) scale(.84);
+    transform-origin: bottom center;
+  }
+  .scene-card {
+    min-height: 260px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(380px, .85fr);
+  }
+  .scene-card__topline { grid-column: 1 / -1; height: 40px; }
+  .scene-copy {
+    min-width: 0;
+    padding: clamp(30px, 4vh, 44px) clamp(34px, 3vw, 54px);
+  }
+  .chapter { margin-bottom: 10px; }
+  .scene-copy h1 { font-size: clamp(38px, 3vw, 48px); }
+  .scene-text { margin: 16px 0 20px; font-size: 13px; line-height: 1.55; }
+  .choices {
+    min-width: 0;
+    border-top: 0;
+    border-left: 1px solid var(--line);
+    padding: 28px clamp(20px, 2vw, 30px);
+  }
+  .choice, .scan-result { min-height: 56px; }
+  .junction-choices { gap: 6px; margin-bottom: 6px; }
+  .junction-choice-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .junction-choice-row .choice + .choice,
+  .scan-result { border-left: 0; }
+}
+
+@media (min-width: 1600px) {
+  .game-header {
+    height: 86px;
+    padding-left: 3vw;
+    padding-right: 3vw;
+  }
+  .wordmark--small { font-size: 23px; }
+  .header-actions { gap: 34px; }
+  .header-controls { gap: 22px; }
+  .system-state, .text-button { font-size: 11px; }
+  .game-layout {
+    width: min(1800px, calc(100% - 72px));
+    grid-template-columns: 258px minmax(0, 1fr);
+    gap: clamp(44px, 3.2vw, 64px);
+    padding-top: 32px;
+  }
+  .status-panel { padding: 24px; }
+  .panel-label,
+  .scene-card__topline,
+  .route-line,
+  .chapter,
+  .autosave-note { font-size: 11px; }
+  .oxygen-block { gap: 20px; padding-top: 25px; }
+  .oxygen-value strong { font-size: 39px; }
+  .metric-name, .metric-state { font-size: 11px; }
+  .meter { height: 4px; margin: 17px 0 25px; }
+  .status-grid > div, .current-location { padding-top: 17px; padding-bottom: 17px; }
+  .status-grid span { font-size: 10px; }
+  .status-grid strong { font-size: 21px; }
+  .current-location strong { font-size: 14px; }
+  .current-location span, .current-location small { font-size: 9px; }
+  .inventory { padding-top: 20px; }
+  .inventory-list { gap: 10px; margin-top: 16px; }
+  .inventory-list span, .signal-log > p:last-child { font-size: 11px; }
+  .inventory-list i { width: 25px; height: 25px; }
+  .route-line { height: 30px; margin-bottom: 13px; gap: 15px; }
+  .route-line i { width: 54px; }
+  .movement-stage { height: clamp(240px, 27vh, 280px); }
+  .movement-stage__vanishing-point { top: 35px; width: 145px; height: 165px; }
+  .movement-stage__location span, .movement-stage__status { font-size: 9px; }
+  .movement-stage__location strong { font-size: 13px; }
+  .player-character {
+    bottom: 30px;
+    transform: translateX(-50%) scale(1.02);
+  }
+  .scene-card {
+    min-height: 360px;
+    grid-template-columns: minmax(0, 1.12fr) minmax(500px, .88fr);
+  }
+  .scene-card__topline { height: 48px; padding: 0 28px; }
+  .scene-copy { padding: clamp(42px, 5vh, 58px) clamp(46px, 3.4vw, 68px); }
+  .chapter { margin-bottom: 13px; }
+  .scene-copy h1 { font-size: clamp(50px, 3.4vw, 62px); }
+  .scene-text { margin: 21px 0 26px; font-size: 16px; line-height: 1.65; }
+  .objective { padding-left: 21px; }
+  .objective span { font-size: 10px; }
+  .objective p { margin-top: 8px; font-size: 14px; line-height: 1.5; }
+  .choices { padding: 36px clamp(28px, 2.4vw, 42px); }
+  .choices__heading { margin-bottom: 13px; font-size: 10px; }
+  .choice, .scan-result { min-height: 68px; }
+  .choice { grid-template-columns: 44px 1fr 30px; padding: 0 20px; }
+  .choice__index, .choice__copy small { font-size: 10px; }
+  .choice__copy strong { font-size: 14px; }
+  .choice__arrow { font-size: 17px; }
+  .dialog { width: min(540px, 100%); padding: 42px; }
+  .dialog h2 { font-size: 36px; margin-top: 28px; }
+  .dialog > p:not(.panel-label) { font-size: 15px; }
+  .dialog > div { gap: 14px; margin-top: 32px; }
+  .dialog .primary-button,
+  .dialog .secondary-button,
+  .dialog .danger-button { min-height: 58px; padding: 0 26px; font-size: 13px; }
+}
+
 @media (max-width: 760px) {
   .mission-code, .system-state { display: none; }
   .home-nav, .game-header { height: 64px; padding: 0 20px; }

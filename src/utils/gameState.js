@@ -1,9 +1,9 @@
-import { corridors, getCorridor, junctionRooms, MAX_OXYGEN, SAVE_KEY, sideRooms } from "../data/story";
+import { corridors, getCorridor, junctionRooms, SAVE_KEY, sideRooms, STARTING_OXYGEN } from "../data/story";
 
 export const initialGameState = {
   currentRoom: "1a",
   previousRoom: null,
-  oxygen: 200,
+  oxygen: STARTING_OXYGEN,
   battery: 0,
   inventory: [],
   visited: ["1a"],
@@ -19,10 +19,8 @@ export const initialGameState = {
   lastEvent: "Emergency wake cycle complete.",
 };
 
-export const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
-
 function withOxygen(state, amount) {
-  const oxygen = clamp(state.oxygen + amount, 0, MAX_OXYGEN);
+  const oxygen = Math.max(state.oxygen + amount, 0);
   return {
     ...state,
     oxygen,
@@ -98,7 +96,7 @@ export function collectRoomItem(state) {
   if (room.type === "oxygen") {
     return {
       ...state,
-      oxygen: clamp(state.oxygen + 100, 0, MAX_OXYGEN),
+      oxygen: state.oxygen + 100,
       inventory: [...state.inventory, `${room.id}-collected`],
       lastEvent: "Emergency oxygen transferred. O₂ +100.",
     };

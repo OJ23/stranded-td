@@ -26,10 +26,10 @@ describe("game state", () => {
     expect(initialGameState.oxygen).toBe(200);
   });
 
-  it("clamps oxygen at the maximum", () => {
-    const roomState = { ...initialGameState, currentRoom: "1i", oxygen: 160 };
+  it("adds the full oxygen pickup without capping the reserve", () => {
+    const roomState = { ...initialGameState, currentRoom: "1i", oxygen: 170 };
     const next = collectRoomItem(roomState);
-    expect(next.oxygen).toBe(200);
+    expect(next.oxygen).toBe(270);
   });
 
   it("uses battery when scanning and does not charge twice", () => {

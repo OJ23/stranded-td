@@ -54,6 +54,7 @@ afterEach(() => {
   container?.remove();
   root = null;
   container = null;
+  vi.restoreAllMocks();
 });
 
 describe("character movement", () => {
@@ -149,5 +150,38 @@ describe("character movement", () => {
     expect(container.querySelector(".movement-stage").dataset.direction).toBe("idle");
     expect(container.querySelector(".movement-stage").dataset.moving).toBe("false");
     expect(container.textContent).toContain("Pressure readings show the room is open to vacuum.");
+  });
+
+  it("updates a completed scan after the room item is collected", () => {
+    renderGame({
+      currentRoom: "1c",
+      previousRoom: "1i",
+      oxygen: 270,
+      battery: 1,
+      inventory: ["scanner", "1i-collected"],
+      scanned: ["1i"],
+    });
+
+    expect(container.textContent).toContain("The oxygen cylinder is empty.");
+    expect(container.textContent).not.toContain("A sealed oxygen cylinder is reading full.");
+  });
+
+  it("shows the bad ending when the player trusts the AI", () => {
+    vi.spyOn(window.HTMLMediaElement.prototype, "play").mockResolvedValue();
+    vi.spyOn(window.HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
+    renderGame({
+      currentRoom: "3a",
+      previousRoom: "2e",
+      oxygen: 80,
+      battery: 2,
+      inventory: ["engineer-key"],
+      survivorRescued: true,
+      traitorExposed: true,
+    });
+
+    click(findButton("Trust the AI"));
+
+    expect(container.textContent).toContain("Bad ending");
+    expect(container.textContent).toContain("A voice in the dark");
   });
 });

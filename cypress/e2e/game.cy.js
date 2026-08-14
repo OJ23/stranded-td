@@ -57,7 +57,6 @@ describe("Stranded", () => {
     cy.contains("Service Junction");
     cy.contains("Enter Starboard H").click();
     cy.get(".movement-stage").should("have.attr", "data-direction", "right");
-    cy.get('[aria-label="Exploring Auxiliary Power"]');
   });
 
   it("runs scans immediately without triggering movement", () => {

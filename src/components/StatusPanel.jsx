@@ -1,10 +1,11 @@
-import { getCorridor, sideRooms, STARTING_OXYGEN } from "../data/story";
+import { getCorridor, STARTING_OXYGEN } from "../data/story";
+import { getSideRoom } from "../utils/gameState";
 
 export default function StatusPanel({ state }) {
   const oxygenMeterMax = Math.max(STARTING_OXYGEN, state.oxygen);
   const oxygenPercent = Math.min((state.oxygen / STARTING_OXYGEN) * 100, 100);
   const reserve = state.oxygen <= 30 ? "Critical" : state.oxygen <= 70 ? "Low" : "Stable";
-  const currentRoom = getCorridor(state.currentRoom) ?? sideRooms[state.currentRoom];
+  const currentRoom = getCorridor(state.currentRoom) ?? getSideRoom(state);
 
   return (
     <aside className="status-panel" aria-label="Player status">

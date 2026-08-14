@@ -8,7 +8,7 @@ export const corridors = [
     name: "Cryo Bay",
     eyebrow: "Deck 01 / Recovery",
     text: "Cold vapor crawls across the floor. Your pod hangs open behind you, its glass starred from impact. The ship AI insists there is one other survivor.",
-    objective: "Restore your bearings and move toward the command deck.",
+    objective: "Recover your bearings and move toward the command deck.",
   },
   {
     id: "1b",
@@ -116,6 +116,7 @@ export const sideRooms = {
     type: "scanner",
     signal: "No life sign detected",
     scanClue: "A powered scanner and a metal launch key are inside.",
+    emptyScanClue: "The scanner cradle and launch-key bracket are empty.",
     text: "Shelves lie overturned beneath a faded STORE stencil. A microwave scanner still blinks inside its charging cradle, beside a manual launch key marked for the escape deck.",
   },
   "1h": {
@@ -126,6 +127,7 @@ export const sideRooms = {
     type: "battery",
     signal: "No life sign detected",
     scanClue: "One portable power cell still holds a strong charge.",
+    emptyScanClue: "The portable power-cell housing is empty.",
     text: "A bank of dead capacitors surrounds one intact portable cell.",
   },
   "1i": {
@@ -136,6 +138,7 @@ export const sideRooms = {
     type: "oxygen",
     signal: "No life sign detected",
     scanClue: "A sealed oxygen cylinder is reading full.",
+    emptyScanClue: "The oxygen cylinder is empty.",
     text: "An emergency cylinder sits behind cracked safety glass, its gauge still in the green.",
   },
   "2f": {
@@ -176,6 +179,7 @@ export const sideRooms = {
     type: "oxygen",
     signal: "No life sign detected",
     scanClue: "A full oxygen cylinder is lodged beneath a bunk.",
+    emptyScanClue: "The oxygen cylinder beneath the bunk is empty.",
     text: "A full oxygen cylinder has rolled beneath a bunk. Someone left in a hurry.",
   },
 };

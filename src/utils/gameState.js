@@ -8,6 +8,7 @@ export const initialGameState = {
   inventory: [],
   visited: ["1a"],
   scanned: [],
+  roomLayout: Object.fromEntries(Object.values(junctionRooms).flat().map((roomId) => [roomId, roomId])),
   commsRepaired: false,
   aiInvestigated: false,
   traitorTrusted: false,
@@ -18,6 +19,53 @@ export const initialGameState = {
   turn: 0,
   lastEvent: "Emergency wake cycle complete.",
 };
+
+export function createRoomLayout(random = Math.random) {
+  return Object.values(junctionRooms).reduce((layout, roomIds) => {
+    const contents = [...roomIds];
+    for (let index = contents.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(random() * (index + 1));
+      [contents[index], contents[swapIndex]] = [contents[swapIndex], contents[index]];
+    }
+    if (contents.every((contentId, index) => contentId === roomIds[index])) {
+      contents.push(contents.shift());
+    }
+    roomIds.forEach((roomId, index) => {
+      layout[roomId] = contents[index];
+    });
+    return layout;
+  }, {});
+}
+
+export function createInitialGameState(random = Math.random) {
+  return { ...initialGameState, roomLayout: createRoomLayout(random) };
+}
+
+export function getSideRoom(state, roomId = state.currentRoom) {
+  const slot = sideRooms[roomId];
+  if (!slot) return undefined;
+  const contents = sideRooms[state.roomLayout?.[roomId] ?? roomId] ?? slot;
+  return {
+    ...contents,
+    id: roomId,
+    label: slot.label,
+    direction: slot.direction,
+    contentId: contents.id,
+  };
+}
+
+export function findRoomIdByType(state, type, deck = String(state.currentRoom).charAt(0)) {
+  return Object.keys(sideRooms).find(
+    (roomId) => roomId.startsWith(deck) && getSideRoom(state, roomId)?.type === type,
+  );
+}
+
+export function getRoomScanClue(state, roomId) {
+  const room = getSideRoom(state, roomId);
+  if (!room) return "";
+  const collected = state.inventory.includes(`${roomId}-collected`);
+  return collected && room.emptyScanClue ? room.emptyScanClue : room.scanClue;
+}
 
 function withOxygen(state, amount) {
   const oxygen = Math.max(state.oxygen + amount, 0);
@@ -41,13 +89,13 @@ export function moveTo(state, roomId) {
       currentRoom: roomId,
       visited: [...new Set([...state.visited, roomId])],
       turn: state.turn + 1,
-      lastEvent: `Entered ${sideRooms[roomId]?.name ?? roomId}.`,
+      lastEvent: `Entered ${getSideRoom(state, roomId)?.name ?? roomId}.`,
     },
     -10,
   );
 
   if (next.ending) return next;
-  if (sideRooms[roomId]?.type === "hazard") {
+  if (getSideRoom(state, roomId)?.type === "hazard") {
     return {
       ...next,
       oxygen: 0,
@@ -75,7 +123,7 @@ export function leaveSideRoom(state) {
 }
 
 export function collectRoomItem(state) {
-  const room = sideRooms[state.currentRoom];
+  const room = getSideRoom(state);
   if (!room || state.inventory.includes(`${room.id}-collected`)) return state;
 
   if (room.type === "scanner") {
@@ -115,11 +163,12 @@ export function scanRoom(state, roomId) {
   ) {
     return state;
   }
+  const room = getSideRoom(state, roomId);
   return {
     ...state,
     battery: state.battery - 1,
     scanned: [...new Set([...state.scanned, roomId])],
-    lastEvent: `${sideRooms[roomId].label} scan: ${sideRooms[roomId].signal}. ${sideRooms[roomId].scanClue}`,
+    lastEvent: `${room.label} scan: ${room.signal}. ${getRoomScanClue(state, roomId)}`,
   };
 }
 
@@ -143,7 +192,7 @@ export function investigateAI(state) {
 }
 
 export function answerSurvivor(state, accept) {
-  const room = sideRooms[state.currentRoom];
+  const room = getSideRoom(state);
   if (!["survivor", "traitor"].includes(room?.type)) return state;
   if (!accept) {
     return { ...state, lastEvent: "You keep your oxygen and step away." };
@@ -166,7 +215,7 @@ export function answerSurvivor(state, accept) {
     survivorFound: true,
     survivorRescued: true,
     traitorExposed: true,
-    lastEvent: "Engineer rescued. She exposes the saboteur in 2G and warns that 2F is an airlock.",
+    lastEvent: `Engineer rescued. She exposes the saboteur in ${getSideRoom(state, findRoomIdByType(state, "traitor")).label} and warns that ${getSideRoom(state, findRoomIdByType(state, "hazard")).label} is an airlock.`,
   };
 }
 

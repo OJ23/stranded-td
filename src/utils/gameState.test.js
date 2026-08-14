@@ -4,6 +4,10 @@ import {
   answerSurvivor,
   clearSave,
   collectRoomItem,
+  createInitialGameState,
+  createRoomLayout,
+  getRoomScanClue,
+  getSideRoom,
   initialGameState,
   launch,
   loadGame,
@@ -24,6 +28,41 @@ describe("game state", () => {
 
   it("starts with a full 200 oxygen reserve", () => {
     expect(initialGameState.oxygen).toBe(200);
+  });
+
+  it("randomizes room contents independently of the labeled doors", () => {
+    const layout = createRoomLayout(() => 0);
+    expect(layout).toEqual({
+      "1f": "1g",
+      "1g": "1h",
+      "1h": "1i",
+      "1i": "1f",
+      "2f": "2g",
+      "2g": "2h",
+      "2h": "2i",
+      "2i": "2f",
+    });
+
+    const state = createInitialGameState(() => 0);
+    expect(getSideRoom(state, "1f")).toMatchObject({
+      id: "1f",
+      label: "Port F",
+      direction: "left",
+      type: "scanner",
+      contentId: "1g",
+    });
+  });
+
+  it("scans the contents assigned to a door", () => {
+    const state = {
+      ...createInitialGameState(() => 0),
+      currentRoom: "1c",
+      battery: 1,
+      inventory: ["scanner"],
+    };
+    const scanned = scanRoom(state, "1f");
+    expect(scanned.lastEvent).toContain("A powered scanner and a metal launch key are inside.");
+    expect(scanned.lastEvent).not.toContain("open to vacuum");
   });
 
   it("adds the full oxygen pickup without capping the reserve", () => {
@@ -48,6 +87,17 @@ describe("game state", () => {
     const secondScan = scanRoom(scanned, "1g");
     expect(secondScan.scanned).toEqual(["1f", "1g"]);
     expect(secondScan.battery).toBe(0);
+  });
+
+  it("reports an empty container after a scanned room item is collected", () => {
+    const collected = collectRoomItem({
+      ...initialGameState,
+      currentRoom: "1i",
+      scanned: ["1i"],
+    });
+
+    expect(getRoomScanClue(collected, "1i")).toBe("The oxygen cylinder is empty.");
+    expect(getRoomScanClue(collected, "1i")).not.toContain("reading full");
   });
 
   it("reports stable life for both people without revealing allegiance", () => {
@@ -122,8 +172,8 @@ describe("game state", () => {
     }, true);
     expect(rescued.oxygen).toBe(70);
     expect(rescued.traitorExposed).toBe(true);
-    expect(rescued.lastEvent).toContain("2G");
-    expect(rescued.lastEvent).toContain("2F");
+    expect(rescued.lastEvent).toContain("Port G");
+    expect(rescued.lastEvent).toContain("Port F");
   });
 
   it("ends in betrayal when the player gives oxygen to the traitor", () => {
@@ -141,6 +191,19 @@ describe("game state", () => {
     const result = launch({ ...initialGameState, currentRoom: "3a", battery: 2 }, false);
     expect(result.ending).toBeNull();
     expect(result.lastEvent).toBe("The manual launch key is still missing.");
+  });
+
+  it("ends badly when the player trusts the AI", () => {
+    const result = launch({
+      ...initialGameState,
+      currentRoom: "3a",
+      battery: 2,
+      survivorRescued: true,
+      traitorExposed: true,
+      inventory: ["engineer-key"],
+    }, true);
+
+    expect(result.ending).toBe("bad");
   });
 
   it("saves and loads progress", () => {

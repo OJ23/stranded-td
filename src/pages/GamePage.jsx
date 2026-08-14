@@ -7,13 +7,16 @@ import GameHeader from "../components/GameHeader";
 import MovementStage from "../components/MovementStage";
 import SceneCard from "../components/SceneCard";
 import StatusPanel from "../components/StatusPanel";
-import { getCorridor, junctionRooms, sideRooms } from "../data/story";
+import { getCorridor, junctionRooms } from "../data/story";
 import {
   advance,
   answerSurvivor,
   clearSave,
   collectRoomItem,
-  initialGameState,
+  createInitialGameState,
+  findRoomIdByType,
+  getRoomScanClue,
+  getSideRoom,
   investigateAI,
   launch,
   leaveSideRoom,
@@ -29,11 +32,13 @@ import { sounds } from "../utils/sounds";
 const failedEndings = new Set(["oxygen", "airlock", "betrayed", "bad"]);
 
 function getSceneRoom(room, state) {
-  if (state.currentRoom === "2h" && state.survivorFound) {
+  if (room?.type === "survivor" && state.survivorFound) {
+    const traitor = getSideRoom(state, findRoomIdByType(state, "traitor"));
+    const hazard = getSideRoom(state, findRoomIdByType(state, "hazard"));
     return {
       ...room,
-      text: "The wounded engineer reveals that the man in 2G is the saboteur who incapacitated her. She warns you not to enter 2G and confirms that 2F is an exposed airlock. With your oxygen shared, she can now reach the escape pod with you.",
-      objective: "Avoid rooms 2F and 2G. Reach the escape deck together.",
+      text: `The wounded engineer reveals that the man behind ${traitor.label} is the saboteur who incapacitated her. She warns you not to enter ${traitor.label} and confirms that ${hazard.label} is an exposed airlock. With your oxygen shared, she can now reach the escape pod with you.`,
+      objective: `Avoid ${hazard.label} and ${traitor.label}. Reach the escape deck together.`,
     };
   }
 
@@ -51,7 +56,7 @@ export default function GamePage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [state, setState] = useState(() =>
-    location.state?.newGame ? initialGameState : loadGame() ?? initialGameState,
+    location.state?.newGame ? createInitialGameState() : loadGame() ?? createInitialGameState(),
   );
   const [restartOpen, setRestartOpen] = useState(false);
   const [saveConfirmed, setSaveConfirmed] = useState(false);
@@ -60,7 +65,7 @@ export default function GamePage() {
   const movementActionRef = useRef(null);
   const movementStageRef = useRef(null);
   const corridor = getCorridor(state.currentRoom);
-  const room = corridor ?? sideRooms[state.currentRoom];
+  const room = corridor ?? getSideRoom(state);
   const sceneRoom = getSceneRoom(room, state);
 
   useEffect(() => {
@@ -100,7 +105,7 @@ export default function GamePage() {
   const choices = useMemo(() => {
     if (state.ending) return [];
     const result = [];
-    const side = sideRooms[state.currentRoom];
+    const side = getSideRoom(state);
 
     if (side) {
       const collected = state.inventory.includes(`${side.id}-collected`);
@@ -137,11 +142,12 @@ export default function GamePage() {
 
     if (room.junction) {
       junctionRooms[room.junction].forEach((roomId) => {
-        const target = sideRooms[roomId];
+        const target = getSideRoom(state, roomId);
+        const scanClue = getRoomScanClue(state, roomId);
         const scanned = state.scanned.includes(roomId);
         result.push({
           title: `Enter ${target.label}`,
-          detail: scanned ? target.scanClue : "Scan pending",
+          detail: scanned ? scanClue : "Scan pending",
           action: () => performMovement(target.direction, () => update(moveTo, roomId), roomId),
           sound: "airlock",
           variant: scanned && target.type === "hazard" ? "danger" : scanned && ["survivor", "traitor"].includes(target.type) ? "signal" : "default",
@@ -242,7 +248,7 @@ export default function GamePage() {
     movementActionRef.current = null;
     setMovement(null);
     clearSave();
-    setState({ ...initialGameState });
+    setState(createInitialGameState());
     setRestartOpen(false);
   };
 
@@ -306,7 +312,7 @@ export default function GamePage() {
           <MovementStage
             stageRef={movementStageRef}
             room={sceneRoom}
-            exits={room.junction ? junctionRooms[room.junction].map((roomId) => sideRooms[roomId]) : []}
+            exits={room.junction ? junctionRooms[room.junction].map((roomId) => getSideRoom(state, roomId)) : []}
             direction={movement?.direction}
             targetRoomId={movement?.targetRoomId}
             moving={Boolean(movement)}
@@ -336,10 +342,10 @@ export default function GamePage() {
                         ))}
                       {state.scanned.includes(roomId) && (
                         <div className="scan-result" role="status">
-                          <span>{sideRooms[roomId].label} scan result</span>
+                          <span>{getSideRoom(state, roomId).label} scan result</span>
                           <strong>
-                            {sideRooms[roomId].signal}<br />
-                            {sideRooms[roomId].scanClue}
+                            {getSideRoom(state, roomId).signal}<br />
+                            {getRoomScanClue(state, roomId)}
                           </strong>
                         </div>
                       )}

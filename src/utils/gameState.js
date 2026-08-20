@@ -164,11 +164,12 @@ export function scanRoom(state, roomId) {
     return state;
   }
   const room = getSideRoom(state, roomId);
+  const scanClue = getRoomScanClue(state, roomId);
   return {
     ...state,
     battery: state.battery - 1,
     scanned: [...new Set([...state.scanned, roomId])],
-    lastEvent: `${room.label} scan: ${room.signal}. ${getRoomScanClue(state, roomId)}`,
+    lastEvent: `${room.label} scan: ${room.signal}.${scanClue ? ` ${scanClue}` : ""}`,
   };
 }
 

@@ -149,7 +149,29 @@ describe("character movement", () => {
 
     expect(container.querySelector(".movement-stage").dataset.direction).toBe("idle");
     expect(container.querySelector(".movement-stage").dataset.moving).toBe("false");
-    expect(container.textContent).toContain("Pressure readings show the room is open to vacuum.");
+    expect(container.querySelector(".scan-result").textContent)
+      .toContain("Pressure readings show the room is open to vacuum.");
+    expect(findButton("Enter Port F").textContent)
+      .not.toContain("Pressure readings show the room is open to vacuum.");
+  });
+
+  it("uses the same inconclusive scan reading for both occupied rooms", () => {
+    renderGame({
+      currentRoom: "2c",
+      previousRoom: "2b",
+      oxygen: 120,
+      scanned: ["2g", "2h"],
+    });
+
+    const readings = [...container.querySelectorAll(".scan-result strong")]
+      .map((result) => result.textContent);
+
+    expect(readings).toEqual([
+      "Stable life found, but pulse dropping",
+      "Stable life found, but pulse dropping",
+    ]);
+    expect(container.textContent).not.toContain("mobile adult");
+    expect(container.textContent).not.toContain("injured adult");
   });
 
   it("updates a completed scan after the room item is collected", () => {

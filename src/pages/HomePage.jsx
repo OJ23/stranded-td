@@ -1,12 +1,16 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
+import homeBackground from "../../images/8.jpeg";
 import { loadGame } from "../utils/gameState";
 
 export default function HomePage() {
   const hasSave = useMemo(() => Boolean(loadGame()), []);
 
   return (
-    <main className="home">
+    <main
+      className="home"
+      style={{ "--home-background-image": `url(${homeBackground})` }}
+    >
       <div className="starfield" aria-hidden="true" />
       <header className="home-nav">
         <span className="wordmark wordmark--small">STRANDED<span className="wordmark__dot">.</span></span>
@@ -22,9 +26,11 @@ export default function HomePage() {
         <p className="eyebrow">A choice-driven survival story</p>
         <h1 className="wordmark">STRANDED<span className="wordmark__dot">.</span></h1>
         <p className="hero__intro">
-          You wake alone aboard a dying spacecraft. The ship says someone else survived.
+          You wake alone aboard a  dying spacecraft to alarms, empty corridors, and a ship drifting through deep space. The ship says someone else survived.
           Your oxygen says you do not have long.
+          <p>What do you do?</p>
         </p>
+        
         <div className="hero__actions">
           <Link className="primary-button" to="/game" state={{ newGame: !hasSave }}>
             {hasSave ? "Continue transmission" : "Begin transmission"}

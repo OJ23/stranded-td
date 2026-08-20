@@ -143,11 +143,10 @@ export default function GamePage() {
     if (room.junction) {
       junctionRooms[room.junction].forEach((roomId) => {
         const target = getSideRoom(state, roomId);
-        const scanClue = getRoomScanClue(state, roomId);
         const scanned = state.scanned.includes(roomId);
         result.push({
           title: `Enter ${target.label}`,
-          detail: scanned ? scanClue : "Scan pending",
+          detail: "Movement costs 10 O₂",
           action: () => performMovement(target.direction, () => update(moveTo, roomId), roomId),
           sound: "airlock",
           variant: scanned && target.type === "hazard" ? "danger" : scanned && ["survivor", "traitor"].includes(target.type) ? "signal" : "default",
@@ -344,8 +343,10 @@ export default function GamePage() {
                         <div className="scan-result" role="status">
                           <span>{getSideRoom(state, roomId).label} scan result</span>
                           <strong>
-                            {getSideRoom(state, roomId).signal}<br />
-                            {getRoomScanClue(state, roomId)}
+                            {getSideRoom(state, roomId).signal}
+                            {getRoomScanClue(state, roomId) && (
+                              <><br />{getRoomScanClue(state, roomId)}</>
+                            )}
                           </strong>
                         </div>
                       )}

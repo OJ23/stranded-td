@@ -157,8 +157,8 @@ export const sideRooms = {
     label: "Port G",
     direction: "left",
     type: "traitor",
-    signal: "Stable life found",
-    scanClue: "One mobile adult is waiting beside the airlock controls.",
+    signal: "Stable life found, but pulse dropping",
+    scanClue: "",
     text: "A uniformed man waits beside the airlock controls. He asks for half a tank of oxygen and promises to tell you who sabotaged the ship.",
   },
   "2h": {
@@ -167,8 +167,8 @@ export const sideRooms = {
     label: "Starboard H",
     direction: "right",
     type: "survivor",
-    signal: "Stable life found",
-    scanClue: "One injured adult is bracing the door from inside.",
+    signal: "Stable life found, but pulse dropping",
+    scanClue: "",
     text: "A wounded engineer braces the door shut. She needs oxygen, but says she has proof that the AI voice belongs to the saboteur.",
   },
   "2i": {

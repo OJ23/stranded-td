@@ -108,11 +108,9 @@ describe("game state", () => {
       inventory: ["scanner"],
     };
     const firstScan = scanRoom(scannerState, "2g");
-    expect(firstScan.lastEvent).toContain("Stable life found");
-    expect(firstScan.lastEvent).toContain("waiting beside the airlock controls");
     const secondScan = scanRoom(firstScan, "2h");
-    expect(secondScan.lastEvent).toContain("Stable life found");
-    expect(secondScan.lastEvent).toContain("injured adult");
+    expect(firstScan.lastEvent).toBe("Port G scan: Stable life found, but pulse dropping.");
+    expect(secondScan.lastEvent).toBe("Starboard H scan: Stable life found, but pulse dropping.");
   });
 
   it("kills the player in an airlock", () => {

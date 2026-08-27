@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import homeBackground from "../../images/8.jpeg";
 import { loadGame } from "../utils/gameState";
+import { sounds } from "../utils/sounds";
 
 export default function HomePage() {
   const hasSave = useMemo(() => Boolean(loadGame()), []);
@@ -32,12 +33,12 @@ export default function HomePage() {
         </p>
         
         <div className="hero__actions">
-          <Link className="primary-button" to="/game" state={{ newGame: !hasSave }}>
+          <Link className="primary-button" to="/entrance" state={{ newGame: !hasSave }} onClick={() => sounds.playTransmission()}>
             {hasSave ? "Continue transmission" : "Begin transmission"}
             <span aria-hidden="true">↗</span>
           </Link>
           {hasSave && (
-            <Link className="secondary-button" to="/game" state={{ newGame: true }}>
+            <Link className="secondary-button" to="/entrance" state={{ newGame: true }} onClick={() => sounds.playTransmission()}>
               New story
             </Link>
           )}

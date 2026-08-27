@@ -10,6 +10,18 @@ const endingSounds = Object.entries(endingSoundFiles).reduce((groups, [path, url
   return groups;
 }, { bad: [], good: [], neutral: [] });
 
+const startupSoundFiles = import.meta.glob("../../sounds/startup/*.mp3", {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+
+const findStartupSound = (name) => Object.entries(startupSoundFiles)
+  .find(([path]) => path.includes(name))?.[1];
+
+const fleetBattleSound = findStartupSound("Epic_intergalactic_fleet_battle");
+const transmissionSound = findStartupSound("A_short,_dry_recording");
+
 const failedEndings = new Set(["oxygen", "airlock", "betrayed", "bad"]);
 
 export function getEndingSoundCategory(ending) {
@@ -23,6 +35,10 @@ class SoundController {
     this.ambientGain = null;
     this.ambientOsc = null;
     this.endingAudio = null;
+    this.startupAudio = null;
+    this.startupAttempted = false;
+    this.startupBlocked = false;
+    this.transmissionAudio = null;
   }
 
   init() {
@@ -126,6 +142,36 @@ class SoundController {
     osc.stop(now + 0.3);
   }
 
+  playStartup() {
+    if (this.startupAttempted || this.muted || !fleetBattleSound || typeof Audio === "undefined") return;
+
+    this.startupAttempted = true;
+    this.startupAudio = new Audio(fleetBattleSound);
+    const playback = this.startupAudio.play();
+    playback?.catch?.(() => {
+      this.startupBlocked = true;
+    });
+  }
+
+  playTransmission() {
+    if (this.muted || !transmissionSound || typeof Audio === "undefined") return;
+
+    // A click provides the user gesture some browsers require for startup audio.
+    if (this.startupBlocked && this.startupAudio) {
+      this.startupBlocked = false;
+      const startupPlayback = this.startupAudio.play();
+      startupPlayback?.catch?.(() => {});
+    }
+
+    if (this.transmissionAudio) {
+      this.transmissionAudio.pause();
+      this.transmissionAudio.currentTime = 0;
+    }
+    this.transmissionAudio = new Audio(transmissionSound);
+    const playback = this.transmissionAudio.play();
+    playback?.catch?.(() => {});
+  }
+
   playEnding(ending) {
     this.stopEnding();
     if (this.muted || typeof Audio === "undefined") return;
@@ -166,6 +212,8 @@ class SoundController {
       this.ambientGain.gain.setTargetAtTime(this.muted ? 0 : 0.035, this.ctx.currentTime, 0.02);
     }
     if (this.endingAudio) this.endingAudio.muted = this.muted;
+    if (this.startupAudio) this.startupAudio.muted = this.muted;
+    if (this.transmissionAudio) this.transmissionAudio.muted = this.muted;
     if (!this.muted) this.startAmbientHum();
     return this.muted;
   }

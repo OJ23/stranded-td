@@ -6,6 +6,8 @@ describe("Stranded", () => {
       },
     });
     cy.contains("Begin transmission").click();
+    cy.contains("INITIALIZING...", { timeout: 5000 });
+    cy.contains("Cryo Bay", { timeout: 3000 });
   };
 
   it("starts a new story and advances", () => {

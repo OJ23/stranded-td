@@ -184,7 +184,7 @@ export function repairComms(state) {
 }
 
 export function investigateAI(state) {
-  if (state.currentRoom !== "2c" || state.aiInvestigated) return state;
+  if (state.currentRoom !== "2b" || state.aiInvestigated) return state;
   return {
     ...state,
     aiInvestigated: true,
@@ -242,13 +242,21 @@ export function launch(state, trustAI) {
 }
 
 export function saveGame(state) {
-  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  localStorage.setItem(SAVE_KEY, JSON.stringify({ ...state, saveVersion: 2 }));
 }
 
 export function loadGame() {
   try {
     const saved = JSON.parse(localStorage.getItem(SAVE_KEY));
-    return saved && saved.currentRoom ? { ...initialGameState, ...saved } : null;
+    if (!saved?.currentRoom) return null;
+    // Older saves used 2C for Crew Junction and still included Command Lift.
+    if (saved.saveVersion !== 2) {
+      const migratedRoom = (id) => ({ "2b": "2b", "2c": "2b", "2d": "2c", "2e": "2c" })[id] ?? id;
+      saved.currentRoom = migratedRoom(saved.currentRoom);
+      saved.previousRoom = saved.previousRoom === "2b" ? "2a" : migratedRoom(saved.previousRoom);
+      if (Array.isArray(saved.visited)) saved.visited = [...new Set(saved.visited.map(migratedRoom))];
+    }
+    return { ...initialGameState, ...saved };
   } catch {
     return null;
   }

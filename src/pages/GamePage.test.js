@@ -11,7 +11,7 @@ let container;
 let root;
 
 function renderGame(savedState) {
-  if (savedState) localStorage.setItem(SAVE_KEY, JSON.stringify(savedState));
+  if (savedState) localStorage.setItem(SAVE_KEY, JSON.stringify({ ...savedState, saveVersion: 2 }));
   container = document.createElement("div");
   document.body.appendChild(container);
   root = createRoot(container);
@@ -111,7 +111,7 @@ describe("character movement", () => {
   });
 
   it("shows F and G exits on the left and H and I exits on the right at junctions", () => {
-    renderGame({ currentRoom: "2c", previousRoom: "2b", oxygen: 120 });
+    renderGame({ currentRoom: "2b", previousRoom: "2a", oxygen: 120 });
 
     const leftRooms = [...container.querySelectorAll('[data-side="left"] .junction-door')]
       .map((door) => door.dataset.roomId);
@@ -124,7 +124,7 @@ describe("character movement", () => {
   });
 
   it("directs the player back to auxiliary power when launch battery is insufficient", () => {
-    renderGame({ currentRoom: "3a", previousRoom: "2e", oxygen: 80, battery: 1 });
+    renderGame({ currentRoom: "3a", previousRoom: "2c", oxygen: 80, battery: 1 });
 
     expect(container.textContent).toContain("Insufficient battery: 1/2 units available");
     expect(container.textContent).toContain("Batteries are aboard the ship somewhere. Find them.");
@@ -155,10 +155,42 @@ describe("character movement", () => {
       .not.toContain("Pressure readings show the room is open to vacuum.");
   });
 
+  it("shows the Deck 02 ascent when leaving the Deck 01 relay", () => {
+    renderGame({ currentRoom: "1e", previousRoom: "1d", oxygen: 100 });
+    expect(container.querySelector(".movement-stage__next-deck")?.textContent).toContain("02");
+    expect(findButton("Advance forward").textContent).toContain("Ascend to Deck 02");
+    click(findButton("Advance forward"));
+    expect(container.querySelector(".movement-stage__deck-pulse")?.textContent).toContain("Deck 02");
+    finishMovement();
+    expect(container.textContent).toContain("Habitation Ring");
+  });
+
+  it("shows a descent when returning from Deck 02 to Deck 01", () => {
+    renderGame({ currentRoom: "2a", previousRoom: "1e", oxygen: 100 });
+    click(findButton("Go back"));
+    expect(container.querySelector(".movement-stage__deck-pulse")?.textContent).toContain("Deck 01Descending");
+    finishMovement();
+    expect(container.textContent).toContain("Comms Relay");
+  });
+
+  it("shows ascent and descent at the Deck 03 boundary", () => {
+    renderGame({ currentRoom: "2c", previousRoom: "2b", oxygen: 100, battery: 1 });
+    expect(container.querySelector(".movement-stage__next-deck")?.textContent).toContain("03");
+    expect(findButton("Advance forward").textContent).toContain("Ascend to Deck 03");
+    click(findButton("Advance forward"));
+    expect(container.querySelector(".movement-stage__deck-pulse")?.textContent).toContain("Deck 03Ascending");
+    finishMovement();
+    expect(container.textContent).toContain("Escape Control");
+    click(findButton("Go back for battery"));
+    expect(container.querySelector(".movement-stage__deck-pulse")?.textContent).toContain("Deck 02Descending");
+    finishMovement();
+    expect(container.textContent).toContain("Security Causeway");
+  });
+
   it("uses the same inconclusive scan reading for both occupied rooms", () => {
     renderGame({
-      currentRoom: "2c",
-      previousRoom: "2b",
+      currentRoom: "2b",
+      previousRoom: "2a",
       oxygen: 120,
       scanned: ["2g", "2h"],
     });
@@ -193,7 +225,7 @@ describe("character movement", () => {
     vi.spyOn(window.HTMLMediaElement.prototype, "pause").mockImplementation(() => {});
     renderGame({
       currentRoom: "3a",
-      previousRoom: "2e",
+      previousRoom: "2c",
       oxygen: 80,
       battery: 2,
       inventory: ["engineer-key"],

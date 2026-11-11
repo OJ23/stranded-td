@@ -55,14 +55,6 @@ export const corridors = [
   {
     id: "2b",
     deck: 2,
-    name: "Observation Link",
-    eyebrow: "Deck 02 / Observation",
-    text: "Beyond a fractured viewport, the ship turns slowly above a blue-white moon. No rescue lights answer your signal.",
-    objective: "Cross before the shutters fail.",
-  },
-  {
-    id: "2c",
-    deck: 2,
     name: "Crew Junction",
     eyebrow: "Deck 02 / Junction",
     text: "Four crew modules branch from the central ring. The AI urges you toward the left-hand doors, too quickly to sound impartial.",
@@ -71,20 +63,12 @@ export const corridors = [
     action: "ai",
   },
   {
-    id: "2d",
+    id: "2c",
     deck: 2,
     name: "Security Causeway",
     eyebrow: "Deck 02 / Security",
     text: "A red authorization beam sweeps the narrow causeway. The command deck is one level above.",
     objective: "Carry what you learned to the bridge.",
-  },
-  {
-    id: "2e",
-    deck: 2,
-    name: "Command Lift",
-    eyebrow: "Deck 02 / Lift",
-    text: "The lift cage waits with its doors open. A scratched message beside the controls reads: THE VOICE IS NOT THE SHIP.",
-    objective: "Ascend to the escape deck.",
   },
   {
     id: "3a",

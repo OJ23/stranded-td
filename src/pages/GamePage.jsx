@@ -62,6 +62,9 @@ export default function GamePage() {
   const [saveConfirmed, setSaveConfirmed] = useState(false);
   const [audioMuted, setAudioMuted] = useState(() => sounds.isMuted());
   const [movement, setMovement] = useState(null);
+  const [pickupFeedback, setPickupFeedback] = useState(null);
+  const [relayPulse, setRelayPulse] = useState(null);
+  const [deckPulse, setDeckPulse] = useState(null);
   const movementActionRef = useRef(null);
   const movementStageRef = useRef(null);
   const corridor = getCorridor(state.currentRoom);
@@ -77,6 +80,24 @@ export default function GamePage() {
     const timeout = window.setTimeout(() => setSaveConfirmed(false), 1600);
     return () => window.clearTimeout(timeout);
   }, [saveConfirmed]);
+
+  useEffect(() => {
+    if (!pickupFeedback) return undefined;
+    const timeout = window.setTimeout(() => setPickupFeedback(null), 1900);
+    return () => window.clearTimeout(timeout);
+  }, [pickupFeedback]);
+
+  useEffect(() => {
+    if (!relayPulse) return undefined;
+    const timeout = window.setTimeout(() => setRelayPulse(null), 1600);
+    return () => window.clearTimeout(timeout);
+  }, [relayPulse]);
+
+  useEffect(() => {
+    if (!deckPulse) return undefined;
+    const timeout = window.setTimeout(() => setDeckPulse(null), 1700);
+    return () => window.clearTimeout(timeout);
+  }, [deckPulse]);
 
   const update = useCallback((fn, ...args) => {
     setState((current) => fn(current, ...args));
@@ -115,6 +136,7 @@ export default function GamePage() {
           detail: side.type === "oxygen" ? "Add 100 O₂" : side.type === "battery" ? "Add 10 battery units" : "Unlock scans and manual launch",
           action: () => update(collectRoomItem),
           sound: "pickup",
+          pickup: side.type,
         });
       }
       if (["survivor", "traitor"].includes(side.type) && !(side.type === "survivor" ? state.survivorFound : state.traitorTrusted)) {
@@ -168,6 +190,7 @@ export default function GamePage() {
         title: "Send distress signal",
         detail: state.battery ? "Transmit now · costs 1 battery" : "Requires 1 battery · optional",
         action: () => update(repairComms),
+        relay: true,
         disabled: state.battery < 1,
         variant: "signal",
       });
@@ -205,14 +228,20 @@ export default function GamePage() {
         action: () => performMovement("backward", () => update(retreat)),
         sound: "footstep",
         variant: state.battery < 2 ? "signal" : "quiet",
+        deckTransition: { deck: 2, direction: "descending" },
       });
     } else {
       result.push({
         title: "Advance forward",
-        detail: "Movement costs 10 O₂",
+        detail: state.currentRoom === "1e" ? "Ascend to Deck 02 · costs 10 O₂" : state.currentRoom === "2c" ? "Ascend to Deck 03 · costs 10 O₂" : "Movement costs 10 O₂",
         action: () => performMovement("forward", () => update(advance)),
         sound: "footstep",
         variant: "signal",
+        deckTransition: state.currentRoom === "1e"
+          ? { deck: 2, direction: "ascending" }
+          : state.currentRoom === "2c"
+            ? { deck: 3, direction: "ascending" }
+            : null,
       });
       if (state.currentRoom !== "1a") {
         result.push({
@@ -221,6 +250,7 @@ export default function GamePage() {
           action: () => performMovement("backward", () => update(retreat)),
           sound: "footstep",
           variant: "quiet",
+          deckTransition: state.currentRoom === "2a" ? { deck: 1, direction: "descending" } : null,
         });
       }
     }
@@ -230,6 +260,9 @@ export default function GamePage() {
   const activateChoice = useCallback((choice) => {
     sounds.startAmbientHum();
     sounds.play(choice.sound ?? "click");
+    if (choice.pickup) setPickupFeedback({ type: choice.pickup, key: Date.now() });
+    if (choice.relay) setRelayPulse(Date.now());
+    if (choice.deckTransition) setDeckPulse({ ...choice.deckTransition, key: Date.now() });
     choice.action();
   }, []);
 
@@ -246,6 +279,9 @@ export default function GamePage() {
   const restart = () => {
     movementActionRef.current = null;
     setMovement(null);
+    setPickupFeedback(null);
+    setRelayPulse(null);
+    setDeckPulse(null);
     clearSave();
     setState(createInitialGameState());
     setRestartOpen(false);
@@ -311,10 +347,16 @@ export default function GamePage() {
           <MovementStage
             stageRef={movementStageRef}
             room={sceneRoom}
-            exits={room.junction ? junctionRooms[room.junction].map((roomId) => getSideRoom(state, roomId)) : []}
+            exits={room.junction ? junctionRooms[room.junction].map((roomId) => ({ ...getSideRoom(state, roomId), scanned: state.scanned.includes(roomId) })) : []}
+            actions={choices}
+            onAction={(choice) => { if (choice && !choice.disabled) activateChoice(choice); }}
             direction={movement?.direction}
             targetRoomId={movement?.targetRoomId}
             moving={Boolean(movement)}
+            collected={room.type ? state.inventory.includes(`${room.id}-collected`) : false}
+            pickupFeedback={pickupFeedback}
+            relayPulse={relayPulse}
+            deckPulse={deckPulse}
             onAnimationEnd={finishMovement}
           />
           <SceneCard room={sceneRoom}>

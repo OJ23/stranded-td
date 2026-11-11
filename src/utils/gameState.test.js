@@ -103,7 +103,7 @@ describe("game state", () => {
   it("reports stable life for both people without revealing allegiance", () => {
     const scannerState = {
       ...initialGameState,
-      currentRoom: "2c",
+      currentRoom: "2b",
       battery: 2,
       inventory: ["scanner"],
     };
@@ -143,6 +143,9 @@ describe("game state", () => {
     const advanced = advance(commsRoom);
     expect(advanced.currentRoom).toBe("2a");
     expect(advanced.oxygen).toBe(190);
+    expect(advance(advanced).currentRoom).toBe("2b");
+    expect(advance(advance(advanced)).currentRoom).toBe("2c");
+    expect(advance(advance(advance(advanced))).currentRoom).toBe("3a");
 
     const transmitted = repairComms({ ...commsRoom, battery: 1 });
     expect(transmitted.commsRepaired).toBe(true);
@@ -208,5 +211,10 @@ describe("game state", () => {
     const state = { ...initialGameState, currentRoom: "1c", oxygen: 80 };
     saveGame(state);
     expect(loadGame()).toMatchObject({ currentRoom: "1c", oxygen: 80 });
+  });
+
+  it("maps older Deck 02 saves to the remaining rooms", () => {
+    localStorage.setItem("storyGameSave", JSON.stringify({ currentRoom: "2e", previousRoom: "2c", visited: ["2a", "2c", "2d", "2e"] }));
+    expect(loadGame()).toMatchObject({ currentRoom: "2c", previousRoom: "2b", visited: ["2a", "2b", "2c"] });
   });
 });
